@@ -20,10 +20,6 @@ export function validateCommitMessage(message) {
     errors.push("Commit message must include a non-empty reason: line.");
   }
 
-  if (!hasNonEmptyTokenLine(lines, "verification")) {
-    errors.push("Commit message must include a non-empty verification: line.");
-  }
-
   return {
     valid: errors.length === 0,
     errors

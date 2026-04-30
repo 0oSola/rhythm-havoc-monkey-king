@@ -21,6 +21,5 @@ if (!result.valid) {
   console.error("feat: add useful summary");
   console.error("");
   console.error("reason: explain why this change is needed");
-  console.error("verification: npm test");
   process.exit(1);
 }

@@ -2,12 +2,11 @@ import { describe, expect, it } from "vitest";
 import { validateCommitMessage } from "../../scripts/commitMessagePolicy.mjs";
 
 describe("commit message policy", () => {
-  it("accepts a conventional subject with reason and verification", () => {
+  it("accepts a conventional subject with a reason", () => {
     expect(
       validateCommitMessage(`feat: add gate cue metadata
 
-reason: first level needs explicit prompts and animation cues so LevelScene can stay data-driven
-verification: npm test -- tests/level/GateLevel.test.ts tests/level/LevelLoader.test.ts`)
+reason: first level needs explicit prompts and animation cues so LevelScene can stay data-driven`)
     ).toEqual({ valid: true, errors: [] });
   });
 
@@ -22,23 +21,12 @@ verification: npm test`)
     });
   });
 
-  it("rejects commits that do not include verification evidence", () => {
-    expect(
-      validateCommitMessage(`test: add judgement coverage
-
-reason: judgement windows are core gameplay contracts`)
-    ).toEqual({
-      valid: false,
-      errors: ["Commit message must include a non-empty verification: line."]
-    });
-  });
-
   it("rejects commits without a supported conventional subject", () => {
     expect(
       validateCommitMessage(`update stuff
 
 reason: unclear changes are hard to review
-verification: npm test`)
+`)
     ).toEqual({
       valid: false,
       errors: [

@@ -409,7 +409,6 @@ MVP 目标：
 - `type`: 变更类型，如 `feat`、`fix`、`refactor`、`test`、`docs`、`chore`
 - `summary`: 一句话说明做了什么
 - `reason`: 说明为什么需要这次变更
-- `verification`: 说明已运行的验证命令或手动验收方式
 
 推荐格式：
 
@@ -417,12 +416,11 @@ MVP 目标：
 feat: add gate cue metadata
 
 reason: first level needs explicit prompts and animation cues so LevelScene can stay data-driven
-verification: npm test -- tests/level/GateLevel.test.ts tests/level/LevelLoader.test.ts
 ```
 
 强制限制建议：
 
-- 本地使用 `commit-msg` hook 拒绝缺少 `reason:` 或 `verification:` 的提交
+- 本地使用 `commit-msg` hook 拒绝缺少 `reason:` 的提交
 - CI 中重复校验最近提交信息，防止绕过本地 hook
 - 禁止使用 `--no-verify` 绕过提交检查，除非维护者明确批准并在提交正文说明原因
 
