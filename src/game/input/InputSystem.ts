@@ -35,7 +35,7 @@ export function normalizeRawInputs(
 
     consumed.add(index);
     normalized.push({
-      type: input.key,
+      type: input.key === "S" ? "B" : "A",
       timeMs: input.timeMs
     });
   });

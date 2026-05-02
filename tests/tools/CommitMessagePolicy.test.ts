@@ -4,9 +4,9 @@ import { validateCommitMessage } from "../../scripts/commitMessagePolicy.mjs";
 describe("commit message policy", () => {
   it("accepts a conventional subject with a reason", () => {
     expect(
-      validateCommitMessage(`feat: add gate cue metadata
+      validateCommitMessage(`feat: add level cue metadata
 
-reason: first level needs explicit prompts and animation cues so LevelScene can stay data-driven`)
+reason: the level flow needs explicit prompts and animation cues so the scene can stay data-driven`)
     ).toEqual({ valid: true, errors: [] });
   });
 

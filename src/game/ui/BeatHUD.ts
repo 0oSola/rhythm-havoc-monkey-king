@@ -7,29 +7,37 @@ export class BeatHUD {
   private readonly feedbackText: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, levelName: string) {
-    this.titleText = scene.add.text(32, 26, levelName, {
-      color: "#f7efe0",
+    this.titleText = scene.add.text(28, 22, levelName, {
+      color: "#fff7e8",
       fontSize: "22px",
-      fontStyle: "bold"
+      fontStyle: "bold",
+      backgroundColor: "rgba(24, 18, 14, 0.58)",
+      padding: { left: 14, right: 14, top: 8, bottom: 8 }
     });
 
-    this.scoreText = scene.add.text(720, 28, "Combo 0  Score 0", {
-      color: "#f7efe0",
-      fontSize: "18px"
+    this.scoreText = scene.add.text(708, 24, "Combo 0  Score 0", {
+      color: "#fff7e8",
+      fontSize: "18px",
+      backgroundColor: "rgba(24, 18, 14, 0.58)",
+      padding: { left: 14, right: 14, top: 8, bottom: 8 }
     });
 
     this.feedbackText = scene.add
-      .text(480, 106, "按 Space 开始", {
+      .text(480, 40, "按 A 或点击继续", {
         color: "#ffd166",
-        fontSize: "30px",
-        fontStyle: "bold"
+        fontSize: "18px",
+        fontStyle: "bold",
+        backgroundColor: "rgba(24, 18, 14, 0.58)",
+        padding: { left: 14, right: 14, top: 8, bottom: 8 }
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5, 0);
 
     this.promptText = scene.add
-      .text(480, 492, "A 立正 / S 辅助组合 AB", {
-        color: "#d8c7a3",
-        fontSize: "20px"
+      .text(480, 504, "A 立正 / A+S 敬礼", {
+        color: "#2f241c",
+        fontSize: "16px",
+        backgroundColor: "rgba(255, 247, 232, 0.92)",
+        padding: { left: 16, right: 16, top: 8, bottom: 8 }
       })
       .setOrigin(0.5);
   }

@@ -21,7 +21,7 @@ export class MenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     this.add
-      .text(480, 376, "按 Space 开始南天门", {
+      .text(480, 376, "按 Space 查看关卡重构占位页", {
         color: "#d8c7a3",
         fontSize: "20px"
       })

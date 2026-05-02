@@ -1,6 +1,6 @@
 import type { InputType } from "../rhythm/RhythmTypes";
 
-export type RawInputKey = "A" | "B";
+export type RawInputKey = "A" | "S";
 
 export interface RawInput {
   key: RawInputKey;

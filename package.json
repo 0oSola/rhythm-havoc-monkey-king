@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "validate:commit": "node scripts/validate-commit-message.mjs",
+    "commit:guided": "powershell -ExecutionPolicy Bypass -File scripts/commit-guided.ps1",
     "setup:hooks": "git config core.hooksPath .githooks"
   },
   "dependencies": {

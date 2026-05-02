@@ -1,82 +1,73 @@
 import { describe, expect, it } from "vitest";
+import gateLevelData from "../../src/game/level/levels/gate_01.json";
 import { parseLevelDefinition } from "../../src/game/level/LevelLoader";
 
 describe("LevelLoader", () => {
-  it("parses a valid call-response level", () => {
-    const level = parseLevelDefinition({
-      levelId: "gate_01",
-      name: "南天门 · 混进天庭",
-      bpm: 120,
-      audioKey: "gate_01_bgm",
-      type: "call_response",
-      introText: ["新来的？先学礼仪！", "俺也去？"],
-      actions: {
-        A: "stand",
-        AB: "salute"
-      },
-      units: [
-        {
-          demo: ["A", null, "AB", null],
-          player: [null, "A", null, "AB"]
-        }
-      ]
-    });
+  it("parses the new phase-based gate_01 definition", () => {
+    const level = parseLevelDefinition(gateLevelData);
 
     expect(level.levelId).toBe("gate_01");
-    expect(level.units).toHaveLength(1);
-    expect(level.actions.A).toBe("stand");
+    expect(level.type).toBe("teaching");
+    expect(level.phases.map((phase) => phase.id)).toEqual([
+      "opening",
+      "attention_free",
+      "attention_rhythm",
+      "salute_free",
+      "salute_rhythm",
+      "exam"
+    ]);
   });
 
-  it("rejects levels without playable units", () => {
+  it("keeps the agreed first-level practice rules", () => {
+    const level = parseLevelDefinition(gateLevelData);
+    const attentionPractice = level.phases.find((phase) => phase.id === "attention_rhythm");
+    const salutePractice = level.phases.find((phase) => phase.id === "salute_rhythm");
+    const examPhase = level.phases.find((phase) => phase.id === "exam");
+
+    expect(attentionPractice).toMatchObject({
+      type: "practice",
+      requiredPassCount: 3,
+      passThreshold: "GOOD"
+    });
+
+    expect(salutePractice).toMatchObject({
+      type: "practice",
+      requiredPassCount: 3,
+      passThreshold: "GOOD"
+    });
+
+    expect(examPhase).toMatchObject({
+      type: "exam",
+      backgroundKey: "level1-stage-bg"
+    });
+  });
+
+  it("rejects level definitions without phases", () => {
     expect(() =>
       parseLevelDefinition({
-        levelId: "gate_01",
-        name: "南天门 · 混进天庭",
-        bpm: 120,
-        audioKey: "gate_01_bgm",
-        type: "call_response",
-        introText: [],
-        actions: { A: "stand" },
-        units: []
-      })
-    ).toThrow("Level must include at least one unit");
-  });
-
-  it("preserves optional cue metadata for animation and prompts", () => {
-    const level = parseLevelDefinition({
-      levelId: "gate_01",
-      name: "南天门 · 混进天庭",
-      bpm: 120,
-      audioKey: "gate_01_bgm",
-      type: "call_response",
-      introText: [],
-      actions: { A: "stand", AB: "salute" },
-      units: [
-        {
-          demo: ["A", null, "AB", null],
-          player: [null, "A", null, "AB"],
-          demoCues: [
-            { actor: "guard", prompt: "看守卫立正", hitFrame: 1, sfxKey: "gate_01_sfx_stand" },
-            null,
-            { actor: "guard", prompt: "看守卫敬礼", hitFrame: 1, sfxKey: "gate_01_sfx_salute" },
-            null
-          ],
-          playerCues: [
-            null,
-            { actor: "wukong", prompt: "A 立正", hitFrame: 1, sfxKey: "gate_01_sfx_stand" },
-            null,
-            { actor: "wukong", prompt: "A+S 敬礼", hitFrame: 1, sfxKey: "gate_01_sfx_salute" }
-          ]
+        levelId: "broken_level",
+        name: "Broken",
+        bpm: 100,
+        type: "teaching",
+        actions: {
+          ATTENTION: {
+            name: "立正",
+            inputType: "A",
+            animationKey: "wukong_attention_right"
+          }
+        },
+        audio: {
+          practiceKey: "practice",
+          examKey: "exam"
+        },
+        phases: [],
+        resultTexts: {
+          天尊: "ok",
+          真仙: "ok",
+          道童: "ok",
+          凡夫: "ok"
         }
-      ]
-    });
-
-    expect(level.units[0].demoCues?.[0]).toEqual({
-      actor: "guard",
-      prompt: "看守卫立正",
-      hitFrame: 1,
-      sfxKey: "gate_01_sfx_stand"
-    });
-    expect(level.units[0].playerCues?.[1]?.prompt).toBe("A 立正");
+      })
+    ).toThrow("Level must include at least one phase");
   });
 });

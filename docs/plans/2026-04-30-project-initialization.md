@@ -49,16 +49,16 @@
 
 **Steps:**
 1. Add Boot, Preload, Menu, Level, and Result scenes.
-2. Keep LevelScene data-driven with `gate_01.json`.
+2. Keep gameplay scenes data-driven through dedicated level definition files.
 3. Use generated placeholder shapes/text until exported sequence-frame art exists.
 
 ### Task 4: MVP Data Layout
 
 **Files:**
-- Create: `src/game/level/levels/gate_01.json`
+- Create: initial level definition files under `src/game/level/levels/`
 - Create: placeholder README files under `src/assets/`.
 
 **Steps:**
-1. Add first gate level data using the call-response structure.
+1. Add initial level data using the chosen gameplay structure.
 2. Document sequence-frame Spine export rules in the asset folders.
 3. Keep additional levels as future JSON-only additions.

@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import type { ScoreSummary } from "../feedback/ScoreSystem";
+import type { LevelResultPayload } from "../level/LevelResult";
 import { createResultPanel } from "../ui/ResultPanel";
 
 export class ResultScene extends Phaser.Scene {
@@ -7,9 +7,9 @@ export class ResultScene extends Phaser.Scene {
     super("ResultScene");
   }
 
-  create(summary: ScoreSummary): void {
+  create(result: LevelResultPayload): void {
     this.add.rectangle(480, 270, 960, 540, 0x1f1712);
-    createResultPanel(this, summary);
+    createResultPanel(this, result);
     this.input.keyboard?.once("keydown-SPACE", () => this.scene.start("MenuScene"));
     this.input.once("pointerdown", () => this.scene.start("MenuScene"));
   }
