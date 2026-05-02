@@ -1,0 +1,7 @@
+interface:
+  display_name: "Level Workflow"
+  short_description: "Guide level work with spec, TDD, assets, and QA."
+  default_prompt: "Use $level-production-superpowers to drive a level task in this repo from spec through QA."
+
+policy:
+  allow_implicit_invocation: true

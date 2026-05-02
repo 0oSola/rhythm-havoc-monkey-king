@@ -438,6 +438,7 @@ chore: add gate level placeholder assets
 当 AI Agent 执行任何任务时，必须遵守：
 
 - 先阅读本 `AGENTS.md`
+- 关卡开发相关任务优先使用项目内 skill `$level-production-superpowers`：`.codex/skills/level-production-superpowers`
 - 必须先检查并使用适用的 Superpowers skill
 - 代码、玩法、配置、数据结构或行为变更必须严格执行 `superpowers:test-driven-development`
 - TDD 流程不可省略：先写失败测试 -> 运行并确认失败原因正确 -> 写最小实现 -> 运行并确认通过 -> 必要时重构
