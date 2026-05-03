@@ -4,12 +4,14 @@ import type {
   LevelDefinition,
   LevelPhaseDefinition,
   OpeningPhaseDefinition,
-  PracticePhaseDefinition
+  PracticePhaseDefinition,
+  PracticeStage
 } from "./LevelTypes";
 
 export type LevelFlowEvent =
   | { type: "confirm" }
   | { type: "free-input"; inputType: InputType }
+  | { type: "practice-warmup-completed" }
   | { type: "practice-loop-completed"; judgements: readonly JudgementResult[] }
   | { type: "exam-completed" };
 
@@ -17,7 +19,7 @@ export type LevelFlowState =
   | {
       phaseType: "opening";
       currentPhaseId: string;
-      dialogueIndex: number;
+      stepIndex: number;
     }
   | {
       phaseType: "free";
@@ -29,6 +31,7 @@ export type LevelFlowState =
       currentPhaseId: string;
       passCount: number;
       attempts: number;
+      stage: PracticeStage;
     }
   | {
       phaseType: "exam";
@@ -73,16 +76,16 @@ function advanceOpeningFlow(
     return state;
   }
 
-  const nextDialogueIndex = state.dialogueIndex + 1;
+  const nextStepIndex = state.stepIndex + 1;
 
-  if (nextDialogueIndex >= phase.dialogues.length) {
+  if (nextStepIndex >= phase.steps.length) {
     return stateForPhase(phaseById(level, phase.nextPhaseId));
   }
 
   return {
     phaseType: "opening",
     currentPhaseId: phase.id,
-    dialogueIndex: nextDialogueIndex
+    stepIndex: nextStepIndex
   };
 }
 
@@ -121,13 +124,28 @@ function advancePracticeFlow(
   state: LevelFlowState,
   event: LevelFlowEvent
 ): LevelFlowState {
-  if (state.phaseType !== "practice" || event.type !== "practice-loop-completed") {
+  if (state.phaseType !== "practice") {
+    return state;
+  }
+
+  if (state.stage === "warmup") {
+    if (event.type !== "practice-warmup-completed") {
+      return state;
+    }
+
+    return {
+      ...state,
+      stage: "loop"
+    };
+  }
+
+  if (event.type !== "practice-loop-completed") {
     return state;
   }
 
   const loopPassed =
     event.judgements.length === phase.playerEvents.length &&
-    event.judgements.every((judgement) => meetsThreshold(judgement, phase.passThreshold));
+    event.judgements.every((judgement) => meetsPracticeThreshold(judgement, phase.passThreshold));
   const passCount = loopPassed ? state.passCount + 1 : state.passCount;
 
   if (passCount >= phase.requiredPassCount) {
@@ -138,7 +156,8 @@ function advancePracticeFlow(
     phaseType: "practice",
     currentPhaseId: phase.id,
     passCount,
-    attempts: state.attempts + 1
+    attempts: state.attempts + 1,
+    stage: "loop"
   };
 }
 
@@ -153,7 +172,10 @@ function advanceExamFlow(state: LevelFlowState, event: LevelFlowEvent): LevelFlo
   };
 }
 
-function meetsThreshold(judgement: JudgementResult, threshold: Exclude<JudgementResult, "MISS">): boolean {
+function meetsPracticeThreshold(
+  judgement: JudgementResult,
+  threshold: Exclude<JudgementResult, "MISS">
+): boolean {
   const ranks: Record<JudgementResult, number> = {
     PERFECT: 3,
     GREAT: 2,
@@ -180,7 +202,7 @@ function stateForPhase(phase: LevelPhaseDefinition): LevelFlowState {
       return {
         phaseType: "opening",
         currentPhaseId: phase.id,
-        dialogueIndex: 0
+        stepIndex: 0
       };
     case "free":
       return {
@@ -193,7 +215,8 @@ function stateForPhase(phase: LevelPhaseDefinition): LevelFlowState {
         phaseType: "practice",
         currentPhaseId: phase.id,
         passCount: 0,
-        attempts: 0
+        attempts: 0,
+        stage: "warmup"
       };
     case "exam":
       return {

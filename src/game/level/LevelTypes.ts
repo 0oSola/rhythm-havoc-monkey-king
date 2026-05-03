@@ -6,6 +6,13 @@ export type LevelActor = "guard" | "wukong";
 export type LevelActionId = string;
 export type LevelPhaseType = "opening" | "free" | "practice" | "exam";
 export type ExamBarRole = "NONE" | "NPC" | "PLAYER";
+export type OpeningStepKind =
+  | "title-card"
+  | "establishing-shot"
+  | "wukong-run-in"
+  | "guard-reveal"
+  | "dialogue";
+export type PracticeStage = "warmup" | "loop";
 
 export interface LevelAudioDefinition {
   practiceKey: string;
@@ -25,11 +32,17 @@ export interface DialogueLine {
   text: string;
 }
 
+export interface OpeningStepDefinition {
+  kind: OpeningStepKind;
+  speaker?: LevelActor;
+  text?: string;
+}
+
 export interface OpeningPhaseDefinition {
   id: string;
   type: "opening";
   backgroundKey: string;
-  dialogues: readonly DialogueLine[];
+  steps: readonly OpeningStepDefinition[];
   nextPhaseId: string;
 }
 
@@ -61,6 +74,8 @@ export interface PracticePhaseDefinition {
   type: "practice";
   backgroundKey: string;
   promptTemplate: string;
+  warmupAudioKey: string;
+  warmupDurationMs: number;
   audioKey: string;
   bpm: number;
   timeSignature: readonly [number, number];

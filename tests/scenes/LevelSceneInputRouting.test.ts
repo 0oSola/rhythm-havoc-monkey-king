@@ -5,7 +5,7 @@ import { parseLevelDefinition } from "../../src/game/level/LevelLoader";
 import { pointerEventForState } from "../../src/game/scenes/LevelSceneInputRouting";
 
 describe("LevelSceneInputRouting", () => {
-  it("maps pointer click to confirm during opening", () => {
+  it("maps pointer click to confirm during the whole opening sequence", () => {
     const level = parseLevelDefinition(gateLevelData);
     const state = createLevelFlowState(level);
 
@@ -16,7 +16,7 @@ describe("LevelSceneInputRouting", () => {
     const level = parseLevelDefinition(gateLevelData);
     let state = createLevelFlowState(level);
 
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 8; index += 1) {
       state = advanceLevelFlow(level, state, { type: "confirm" });
     }
 
@@ -27,22 +27,31 @@ describe("LevelSceneInputRouting", () => {
     });
   });
 
-  it("does not map pointer click to the salute free-training phase", () => {
+  it("does not map pointer click to warmup, salute free-training, or rhythm gameplay", () => {
     const level = parseLevelDefinition(gateLevelData);
     let state = createLevelFlowState(level);
 
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 8; index += 1) {
       state = advanceLevelFlow(level, state, { type: "confirm" });
     }
 
-    for (let index = 0; index < 9; index += 1) {
+    for (let index = 0; index < 4; index += 1) {
       state = advanceLevelFlow(level, state, { type: "free-input", inputType: "A" });
     }
+
+    expect(state).toMatchObject({
+      currentPhaseId: "attention_rhythm",
+      phaseType: "practice",
+      stage: "warmup"
+    });
+    expect(pointerEventForState(level, state)).toBeNull();
+
+    state = advanceLevelFlow(level, state, { type: "practice-warmup-completed" });
 
     for (let index = 0; index < 3; index += 1) {
       state = advanceLevelFlow(level, state, {
         type: "practice-loop-completed",
-        judgements: ["GOOD", "GOOD"]
+        judgements: ["PERFECT", "PERFECT"]
       });
     }
 

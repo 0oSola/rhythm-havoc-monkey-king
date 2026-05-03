@@ -4,7 +4,7 @@ import { parseLevelDefinition } from "../../src/game/level/LevelLoader";
 import { createExamTimeline } from "../../src/game/level/LevelExamTimeline";
 
 describe("LevelExamTimeline", () => {
-  it("flattens the 34-bar exam into NPC and PLAYER event streams", () => {
+  it("flattens the 34-bar exam into NPC and PLAYER event streams with the updated mid-section roles", () => {
     const level = parseLevelDefinition(gateLevelData);
     const timeline = createExamTimeline(level);
 
@@ -17,6 +17,15 @@ describe("LevelExamTimeline", () => {
       actionId: "ATTENTION",
       inputType: "A"
     });
+
+    expect(timeline.npcEvents.find((event) => event.bar === 20)).toBeUndefined();
+    expect(
+      timeline.playerEvents.filter((event) => event.bar === 20).map((event) => event.timeMs)
+    ).toEqual([45600, 46800]);
+
+    expect(
+      timeline.npcEvents.filter((event) => event.bar === 21).map((event) => event.timeMs)
+    ).toEqual([48000, 48900, 49800]);
 
     expect(timeline.playerEvents.at(-1)).toMatchObject({
       bar: 34,

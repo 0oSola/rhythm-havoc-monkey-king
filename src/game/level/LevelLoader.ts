@@ -1,7 +1,6 @@
 import type { ScoreSummary } from "../feedback/ScoreSystem";
 import type { InputType, JudgementResult } from "../rhythm/RhythmTypes";
 import type {
-  DialogueLine,
   ExamBarDefinition,
   ExamBarEventDefinition,
   FreeTrainingMilestone,
@@ -13,6 +12,8 @@ import type {
   LevelPhaseType,
   LevelType,
   OpeningPhaseDefinition,
+  OpeningStepDefinition,
+  OpeningStepKind,
   PracticeEventDefinition,
   PracticePhaseDefinition
 } from "./LevelTypes";
@@ -23,6 +24,13 @@ const VALID_LEVEL_PHASE_TYPES: readonly LevelPhaseType[] = ["opening", "free", "
 const VALID_ACTORS: readonly LevelActor[] = ["guard", "wukong"];
 const VALID_JUDGEMENTS: readonly JudgementResult[] = ["PERFECT", "GREAT", "GOOD", "MISS"];
 const VALID_RATINGS: readonly ScoreSummary["rating"][] = ["天尊", "真仙", "道童", "凡夫"];
+const VALID_OPENING_STEP_KINDS: readonly OpeningStepKind[] = [
+  "title-card",
+  "establishing-shot",
+  "wukong-run-in",
+  "guard-reveal",
+  "dialogue"
+];
 
 export function parseLevelDefinition(value: unknown): LevelDefinition {
   const record = expectRecord(value, "Level definition must be an object");
@@ -101,21 +109,29 @@ function parseOpeningPhase(record: Record<string, unknown>, index: number): Open
     id: expectString(record.id, `phases[${index}].id`),
     type: "opening",
     backgroundKey: expectString(record.backgroundKey, `phases[${index}].backgroundKey`),
-    dialogues: parseDialogues(record.dialogues, `phases[${index}].dialogues`),
+    steps: parseOpeningSteps(record.steps, `phases[${index}].steps`),
     nextPhaseId: expectString(record.nextPhaseId, `phases[${index}].nextPhaseId`)
   };
 }
 
-function parseDialogues(value: unknown, fieldName: string): DialogueLine[] {
+function parseOpeningSteps(value: unknown, fieldName: string): OpeningStepDefinition[] {
   if (!Array.isArray(value)) {
     throw new Error(`${fieldName} must be an array`);
   }
 
   return value.map((entry, index) => {
     const record = expectRecord(entry, `${fieldName}[${index}] must be an object`);
+    const kind = expectOpeningStepKind(record.kind, `${fieldName}[${index}].kind`);
     return {
-      speaker: expectActor(record.speaker, `${fieldName}[${index}].speaker`),
-      text: expectString(record.text, `${fieldName}[${index}].text`)
+      kind,
+      speaker:
+        kind === "dialogue"
+          ? expectActor(record.speaker, `${fieldName}[${index}].speaker`)
+          : undefined,
+      text:
+        kind === "dialogue"
+          ? expectString(record.text, `${fieldName}[${index}].text`)
+          : parseOptionalString(record.text, `${fieldName}[${index}].text`)
     };
   });
 }
@@ -153,6 +169,8 @@ function parsePracticePhase(record: Record<string, unknown>, index: number): Pra
     type: "practice",
     backgroundKey: expectString(record.backgroundKey, `phases[${index}].backgroundKey`),
     promptTemplate: expectString(record.promptTemplate, `phases[${index}].promptTemplate`),
+    warmupAudioKey: expectString(record.warmupAudioKey, `phases[${index}].warmupAudioKey`),
+    warmupDurationMs: expectPositiveNumber(record.warmupDurationMs, `phases[${index}].warmupDurationMs`),
     audioKey: expectString(record.audioKey, `phases[${index}].audioKey`),
     bpm: expectPositiveNumber(record.bpm, `phases[${index}].bpm`),
     timeSignature: parseTimeSignature(record.timeSignature, `phases[${index}].timeSignature`),
@@ -335,8 +353,20 @@ function expectActor(value: unknown, fieldName: string): LevelActor {
   return value as LevelActor;
 }
 
+function expectOpeningStepKind(value: unknown, fieldName: string): OpeningStepKind {
+  if (typeof value !== "string" || !VALID_OPENING_STEP_KINDS.includes(value as OpeningStepKind)) {
+    throw new Error(`${fieldName} must be a supported opening step kind`);
+  }
+
+  return value as OpeningStepKind;
+}
+
 function expectPassThreshold(value: unknown, fieldName: string): Exclude<JudgementResult, "MISS"> {
-  if (typeof value !== "string" || !VALID_JUDGEMENTS.includes(value as JudgementResult) || value === "MISS") {
+  if (
+    typeof value !== "string" ||
+    !VALID_JUDGEMENTS.includes(value as JudgementResult) ||
+    value === "MISS"
+  ) {
     throw new Error(`${fieldName} must be PERFECT, GREAT, or GOOD`);
   }
 

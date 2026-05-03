@@ -4,32 +4,40 @@ import { parseLevelDefinition } from "../../src/game/level/LevelLoader";
 import { advanceLevelFlow, createLevelFlowState } from "../../src/game/level/LevelFlow";
 
 describe("LevelFlow", () => {
-  it("moves from opening to the first free-training phase after four confirms", () => {
+  it("moves through the eight opening presentation steps before the first free-training phase", () => {
     const level = parseLevelDefinition(gateLevelData);
     let state = createLevelFlowState(level);
 
-    state = advanceLevelFlow(level, state, { type: "confirm" });
-    state = advanceLevelFlow(level, state, { type: "confirm" });
-    state = advanceLevelFlow(level, state, { type: "confirm" });
+    expect(state).toMatchObject({
+      phaseType: "opening",
+      currentPhaseId: "opening",
+      stepIndex: 0
+    });
 
-    expect(state.currentPhaseId).toBe("opening");
+    for (let index = 0; index < 7; index += 1) {
+      state = advanceLevelFlow(level, state, { type: "confirm" });
+      expect(state.phaseType).toBe("opening");
+      expect(state.currentPhaseId).toBe("opening");
+    }
+
+    expect(state.phaseType === "opening" ? state.stepIndex : -1).toBe(7);
 
     state = advanceLevelFlow(level, state, { type: "confirm" });
 
     expect(state.currentPhaseId).toBe("attention_free");
   });
 
-  it("requires nine A inputs to finish the attention free-training phase", () => {
+  it("requires one A press plus three more A presses to finish the attention free-training phase", () => {
     const level = parseLevelDefinition(gateLevelData);
     let state = createLevelFlowState(level);
 
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 8; index += 1) {
       state = advanceLevelFlow(level, state, { type: "confirm" });
     }
 
     state = advanceLevelFlow(level, state, { type: "free-input", inputType: "B" });
 
-    for (let index = 0; index < 8; index += 1) {
+    for (let index = 0; index < 3; index += 1) {
       state = advanceLevelFlow(level, state, { type: "free-input", inputType: "A" });
     }
 
@@ -38,40 +46,74 @@ describe("LevelFlow", () => {
     state = advanceLevelFlow(level, state, { type: "free-input", inputType: "A" });
 
     expect(state.currentPhaseId).toBe("attention_rhythm");
+    expect(state).toMatchObject({
+      phaseType: "practice",
+      stage: "warmup"
+    });
   });
 
-  it("counts GOOD-or-better practice loops and advances after three cumulative passes", () => {
+  it("moves practice from warmup to loop only after the ready bar completes", () => {
     const level = parseLevelDefinition(gateLevelData);
     let state = createLevelFlowState(level);
 
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 8; index += 1) {
       state = advanceLevelFlow(level, state, { type: "confirm" });
     }
-    for (let index = 0; index < 9; index += 1) {
+    for (let index = 0; index < 4; index += 1) {
       state = advanceLevelFlow(level, state, { type: "free-input", inputType: "A" });
     }
 
-    state = advanceLevelFlow(level, state, {
-      type: "practice-loop-completed",
-      judgements: ["GOOD", "GREAT"]
+    expect(state).toMatchObject({
+      phaseType: "practice",
+      currentPhaseId: "attention_rhythm",
+      stage: "warmup"
     });
-    expect(state.currentPhaseId).toBe("attention_rhythm");
+
+    state = advanceLevelFlow(level, state, { type: "practice-warmup-completed" });
+
+    expect(state).toMatchObject({
+      phaseType: "practice",
+      currentPhaseId: "attention_rhythm",
+      stage: "loop"
+    });
+  });
+
+  it("counts practice loops as passes when all target hits are GOOD or better, and advances after three cumulative passes", () => {
+    const level = parseLevelDefinition(gateLevelData);
+    let state = createLevelFlowState(level);
+
+    for (let index = 0; index < 8; index += 1) {
+      state = advanceLevelFlow(level, state, { type: "confirm" });
+    }
+    for (let index = 0; index < 4; index += 1) {
+      state = advanceLevelFlow(level, state, { type: "free-input", inputType: "A" });
+    }
+    state = advanceLevelFlow(level, state, { type: "practice-warmup-completed" });
 
     state = advanceLevelFlow(level, state, {
       type: "practice-loop-completed",
-      judgements: ["MISS", "GOOD"]
+      judgements: ["PERFECT", "GREAT"]
     });
     expect(state.currentPhaseId).toBe("attention_rhythm");
+    expect(state.phaseType === "practice" ? state.passCount : -1).toBe(1);
 
     state = advanceLevelFlow(level, state, {
       type: "practice-loop-completed",
-      judgements: ["PERFECT", "GOOD"]
+      judgements: ["MISS", "PERFECT"]
     });
     expect(state.currentPhaseId).toBe("attention_rhythm");
+    expect(state.phaseType === "practice" ? state.passCount : -1).toBe(1);
 
     state = advanceLevelFlow(level, state, {
       type: "practice-loop-completed",
-      judgements: ["GOOD", "GOOD"]
+      judgements: ["GOOD", "PERFECT"]
+    });
+    expect(state.currentPhaseId).toBe("attention_rhythm");
+    expect(state.phaseType === "practice" ? state.passCount : -1).toBe(2);
+
+    state = advanceLevelFlow(level, state, {
+      type: "practice-loop-completed",
+      judgements: ["GREAT", "GOOD"]
     });
 
     expect(state.currentPhaseId).toBe("salute_free");

@@ -4,23 +4,21 @@
   "bpm": 100,
   "type": "teaching",
   "audio": {
-    "practiceKey": "level1_practice_bgm",
-    "examKey": "level1_exam_bgm"
+    "practiceKey": "level1_attention_practice_bgm",
+    "examKey": "level1_exam_bgm_0503"
   },
   "actions": {
     "ATTENTION": {
       "name": "立正",
       "inputType": "A",
       "animationKey": "wukong_attention_right",
-      "playerSfxKey": "PLAYER-attention.wav",
-      "npcSfxKey": "NPC-attention.wav"
+      "playerSfxKey": "立正.wav"
     },
     "SALUTE": {
       "name": "敬礼",
       "inputType": "AB",
       "animationKey": "wukong_salute_right",
-      "playerSfxKey": "PLAYER-salute.wav",
-      "npcSfxKey": "NPC-salute.wav"
+      "playerSfxKey": "敬礼.wav"
     }
   },
   "phases": [
@@ -28,11 +26,19 @@
       "id": "opening",
       "type": "opening",
       "backgroundKey": "level1-opening-bg",
-      "dialogues": [
-        { "speaker": "guard", "text": "Oi——什么人？" },
-        { "speaker": "wukong", "text": "俺是堂堂花果山水帘洞美猴王孙——" },
-        { "speaker": "guard", "text": "管你是谁，要过南天门，先跟我学礼仪 (｀Д´)" },
-        { "speaker": "wukong", "text": "啊？什么礼仪？" }
+      "steps": [
+        { "kind": "title-card" },
+        { "kind": "establishing-shot" },
+        { "kind": "wukong-run-in" },
+        { "kind": "guard-reveal" },
+        { "kind": "dialogue", "speaker": "guard", "text": "Oi——什么人？" },
+        { "kind": "dialogue", "speaker": "wukong", "text": "俺是堂堂花果山水帘洞美猴王孙——" },
+        {
+          "kind": "dialogue",
+          "speaker": "guard",
+          "text": "管你是谁，要过南天门，先跟我学礼仪 (｀Д´)"
+        },
+        { "kind": "dialogue", "speaker": "wukong", "text": "啊？什么礼仪？" }
       ],
       "nextPhaseId": "attention_free"
     },
@@ -42,9 +48,9 @@
       "backgroundKey": "level1-stage-bg",
       "prompt": "你先学会立正，按A",
       "actionId": "ATTENTION",
-      "requiredCount": 9,
+      "requiredCount": 4,
       "milestones": [
-        { "count": 3, "text": "就是这样，再按几次，我们就跟节奏来。" }
+        { "count": 1, "text": "就是这样，再按几次，我们就跟节奏来。" }
       ],
       "nextPhaseId": "attention_rhythm"
     },
@@ -53,7 +59,9 @@
       "type": "practice",
       "backgroundKey": "level1-stage-bg",
       "promptTemplate": "跟着我的节奏来，还有{n}次。",
-      "audioKey": "level1_practice_bgm",
+      "warmupAudioKey": "level1_practice_ready_bgm",
+      "warmupDurationMs": 2400,
+      "audioKey": "level1_attention_practice_bgm",
       "bpm": 100,
       "timeSignature": [4, 4],
       "beatMs": 600,
@@ -89,7 +97,9 @@
       "type": "practice",
       "backgroundKey": "level1-stage-bg",
       "promptTemplate": "注意我的节奏，还有{n}次。",
-      "audioKey": "level1_practice_bgm",
+      "warmupAudioKey": "level1_practice_ready_bgm",
+      "warmupDurationMs": 2400,
+      "audioKey": "level1_salute_practice_bgm",
       "bpm": 100,
       "timeSignature": [4, 4],
       "beatMs": 600,
@@ -112,7 +122,7 @@
       "id": "exam",
       "type": "exam",
       "backgroundKey": "level1-stage-bg",
-      "audioKey": "level1_exam_bgm",
+      "audioKey": "level1_exam_bgm_0503",
       "bpm": 100,
       "timeSignature": [4, 4],
       "beatMs": 600,
@@ -301,23 +311,23 @@
         },
         {
           "bar": 20,
-          "role": "NPC",
+          "role": "PLAYER",
           "startTimeMs": 45600,
           "endTimeMs": 48000,
           "events": [
             { "beat": 1, "timeMs": 45600, "actionId": "ATTENTION" },
-            { "beat": 2.5, "timeMs": 46500, "actionId": "ATTENTION" },
-            { "beat": 4, "timeMs": 47400, "actionId": "SALUTE" }
+            { "beat": 3, "timeMs": 46800, "actionId": "SALUTE" }
           ]
         },
         {
           "bar": 21,
-          "role": "PLAYER",
+          "role": "NPC",
           "startTimeMs": 48000,
           "endTimeMs": 50400,
           "events": [
             { "beat": 1, "timeMs": 48000, "actionId": "ATTENTION" },
-            { "beat": 3, "timeMs": 49200, "actionId": "SALUTE" }
+            { "beat": 2.5, "timeMs": 48900, "actionId": "ATTENTION" },
+            { "beat": 4, "timeMs": 49800, "actionId": "SALUTE" }
           ]
         },
         {

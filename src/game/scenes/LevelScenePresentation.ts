@@ -13,7 +13,8 @@ export function bubbleActorForState(level: LevelDefinition, state: LevelFlowStat
       return null;
     }
 
-    return phase.dialogues[state.dialogueIndex]?.speaker ?? null;
+    const step = phase.steps[state.stepIndex];
+    return step?.kind === "dialogue" ? step.speaker ?? null : null;
   }
 
   if (state.phaseType === "free" || state.phaseType === "practice" || state.phaseType === "exam") {
@@ -25,10 +26,19 @@ export function bubbleActorForState(level: LevelDefinition, state: LevelFlowStat
 
 export function phaseAudioKeyForState(level: LevelDefinition, state: LevelFlowState): string | null {
   if (state.phaseType === "opening" || state.phaseType === "free") {
-    return "level1_speak_bgm";
+    return "level1_dialogue_bgm";
   }
 
-  if (state.phaseType === "practice" || state.phaseType === "exam") {
+  if (state.phaseType === "practice") {
+    const phase = level.phases.find((entry) => entry.id === state.currentPhaseId);
+    if (!phase || phase.type !== "practice") {
+      return null;
+    }
+
+    return state.stage === "warmup" ? phase.warmupAudioKey : phase.audioKey;
+  }
+
+  if (state.phaseType === "exam") {
     const phase = level.phases.find((entry) => entry.id === state.currentPhaseId);
     return phase && "audioKey" in phase ? phase.audioKey : null;
   }

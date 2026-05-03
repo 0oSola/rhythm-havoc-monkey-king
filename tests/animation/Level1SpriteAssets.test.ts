@@ -23,9 +23,14 @@ describe("Level1SpriteAssets", () => {
   });
 
   it("keeps the agreed frame counts and hit frames", () => {
+    expect(level1SpriteAssets.find((asset) => asset.assetId === "guard_idle_left")).toMatchObject({
+      frameCount: 6,
+      hitFrame: null
+    });
+
     expect(level1SpriteAssets.find((asset) => asset.assetId === "wukong_attention_right")).toMatchObject({
-      frameCount: 4,
-      hitFrame: 3,
+      frameCount: 7,
+      hitFrame: 4,
       sourceSheet: "level1_attention_dual_sheet.png"
     });
 
@@ -39,6 +44,12 @@ describe("Level1SpriteAssets", () => {
       frameCount: 6,
       hitFrame: null,
       sourceSheet: "wukong_run_right_sheet.png"
+    });
+
+    expect(level1SpriteAssets.find((asset) => asset.assetId === "wukong_fail_right")).toMatchObject({
+      frameCount: 2,
+      hitFrame: 2,
+      sourceSheet: "wukong_fail_right_sheet.png"
     });
   });
 
@@ -95,7 +106,7 @@ describe("Level1SpriteAssets", () => {
     const salute = level1SpriteAssets.find((asset) => asset.assetId === "guard_salute_left");
     const idle = level1SpriteAssets.find((asset) => asset.assetId === "guard_idle_left");
 
-    expect(actionLeadInMsForAsset(attention!)).toBe(200);
+    expect(actionLeadInMsForAsset(attention!)).toBe(250);
     expect(actionLeadInMsForAsset(salute!)).toBe(250);
     expect(actionLeadInMsForAsset(idle!)).toBe(0);
   });
