@@ -1,6 +1,8 @@
 import Phaser from "phaser";
 import {
+  animationPhaseKeysForAsset,
   animationKeysForAsset,
+  frameKeysForAssetPhase,
   frameKeysForAsset,
   framePathForAsset,
   level1SpriteAssets
@@ -81,6 +83,18 @@ export class PreloadScene extends Phaser.Scene {
       animationKeysForAsset(asset).forEach((animationKey) => {
         this.createFrameAnimation(animationKey, frameKeys, asset.frameRate, repeat);
       });
+
+      if (asset.playback === "once" && asset.hitFrame !== null) {
+        const phaseKeys = animationPhaseKeysForAsset(asset);
+        (Object.keys(phaseKeys) as Array<keyof typeof phaseKeys>).forEach((phase) => {
+          const phaseFrames = frameKeysForAssetPhase(asset, phase);
+          if (phaseFrames.length === 0) {
+            return;
+          }
+
+          this.createFrameAnimation(phaseKeys[phase], phaseFrames, asset.frameRate, 0);
+        });
+      }
     });
   }
 

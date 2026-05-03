@@ -1,7 +1,12 @@
 import Phaser from "phaser";
 import { AB_CHORD_WINDOW_MS, GOOD_WINDOW_MS } from "../../shared/constants";
 import { AnimationController } from "../animation/AnimationController";
+import {
+  actionLeadInMsForAsset,
+  findLevel1SpriteAsset
+} from "../animation/Level1SpriteAssets";
 import { AudioClock } from "../audio/AudioClock";
+import { createSceneAudioClock } from "../audio/SceneAudioClock";
 import { feedbackForResult } from "../feedback/FeedbackSystem";
 import { createScoreSummary } from "../feedback/ScoreSystem";
 import { normalizeRawInputs } from "../input/InputSystem";
@@ -243,7 +248,7 @@ export class LevelScene extends Phaser.Scene {
     this.practiceDemoIndex = 0;
     this.practicePlayerIndex = 0;
     this.practiceLoopJudgements = [];
-    this.clock = new AudioClock();
+    this.clock = createSceneAudioClock(this.sound);
     await this.clock.start();
     this.showDialogueBubble("guard", this.practicePromptForPhase(phase, state.passCount));
     this.hud?.setPrompt(this.practicePromptForPhase(phase, state.passCount));
@@ -260,7 +265,7 @@ export class LevelScene extends Phaser.Scene {
     this.examPlayerIndex = 0;
     this.examJudgements = [];
     this.examCombo = 0;
-    this.clock = new AudioClock();
+    this.clock = createSceneAudioClock(this.sound);
     await this.clock.start();
     this.showDialogueBubble("guard", "正式考核开始。先听，再跟。");
     this.hud?.setPrompt("A 立正 / A+S 敬礼");
@@ -279,7 +284,7 @@ export class LevelScene extends Phaser.Scene {
         return;
       }
 
-      this.playActorAction("wukong", phase.actionId);
+      this.playReactiveActorAction("wukong", phase.actionId);
       const nextState = advanceLevelFlow(this.level, this.flowState, {
         type: "free-input",
         inputType: input.type
@@ -335,14 +340,17 @@ export class LevelScene extends Phaser.Scene {
   private playDuePracticeDemoEvents(phase: PracticePhaseDefinition, elapsedMs: number): void {
     while (this.practiceDemoIndex < phase.npcEvents.length) {
       const event = phase.npcEvents[this.practiceDemoIndex];
-      const eventTimeMs = this.practiceLoopIndex * phase.loopDurationMs + event.timeMs;
+      const eventTimeMs =
+        this.practiceLoopIndex * phase.loopDurationMs +
+        event.timeMs -
+        this.leadInMsForAction("guard", event.actionId);
 
       if (elapsedMs < eventTimeMs) {
         break;
       }
 
       this.practiceDemoIndex += 1;
-      this.playActorAction("guard", event.actionId);
+      this.playTelegraphedActorAction("guard", event.actionId);
       this.playSfxForAction("guard", event.actionId);
     }
   }
@@ -455,12 +463,13 @@ export class LevelScene extends Phaser.Scene {
   private playDueExamNpcEvents(elapsedMs: number): void {
     while (this.examNpcIndex < this.examNpcEvents.length) {
       const event = this.examNpcEvents[this.examNpcIndex];
-      if (elapsedMs < event.timeMs) {
+      const triggerTimeMs = event.timeMs - this.leadInMsForAction("guard", event.actionId);
+      if (elapsedMs < triggerTimeMs) {
         break;
       }
 
       this.examNpcIndex += 1;
-      this.playActorAction("guard", event.actionId);
+      this.playTelegraphedActorAction("guard", event.actionId);
       this.playSfxForAction("guard", event.actionId);
       this.hud?.setFeedback(`示范：${this.level.actions[event.actionId].name}`, "#7bdff2");
     }
@@ -510,7 +519,7 @@ export class LevelScene extends Phaser.Scene {
     }
   }
 
-  private playActorAction(actor: LevelActor, actionId: LevelActionId): void {
+  private playTelegraphedActorAction(actor: LevelActor, actionId: LevelActionId): void {
     const sprite = actor === "guard" ? this.guard : this.wukong;
     if (!sprite) {
       return;
@@ -519,7 +528,19 @@ export class LevelScene extends Phaser.Scene {
     sprite.setFlipX(ACTOR_LAYOUT[actor].flipX);
     const action = actionNameForActionId(actionId);
     const direction = actor === "guard" ? "left" : "right";
-    this.animationController.playAction(sprite, actor, action, direction);
+    this.animationController.playTelegraphedAction(sprite, actor, action, direction);
+  }
+
+  private playReactiveActorAction(actor: LevelActor, actionId: LevelActionId): void {
+    const sprite = actor === "guard" ? this.guard : this.wukong;
+    if (!sprite) {
+      return;
+    }
+
+    sprite.setFlipX(ACTOR_LAYOUT[actor].flipX);
+    const action = actionNameForActionId(actionId);
+    const direction = actor === "guard" ? "left" : "right";
+    this.animationController.playReactiveAction(sprite, actor, action, direction);
   }
 
   private playPlayerJudgement(actionId: LevelActionId, judgement: JudgementResult): void {
@@ -547,6 +568,14 @@ export class LevelScene extends Phaser.Scene {
     }
 
     this.sound.play(key, { volume: 0.7 });
+  }
+
+  private leadInMsForAction(actor: LevelActor, actionId: LevelActionId): number {
+    const action = actionNameForActionId(actionId);
+    const direction = actor === "guard" ? "left" : "right";
+    const asset = findLevel1SpriteAsset(actor, action, direction);
+
+    return asset ? actionLeadInMsForAsset(asset) : 0;
   }
 
   private stopPhaseAudio(): void {

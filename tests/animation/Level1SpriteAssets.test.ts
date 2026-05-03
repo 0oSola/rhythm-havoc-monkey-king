@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  actionLeadInMsForAsset,
+  animationPhaseKeysForAsset,
   animationKeysForAsset,
+  frameKeysForAssetPhase,
   frameKeysForAsset,
   level1SpriteAssets
 } from "../../src/game/animation/Level1SpriteAssets";
@@ -60,5 +63,40 @@ describe("Level1SpriteAssets", () => {
 
     expect(animationKeysForAsset(wukongAttention!)).toContain("wukong_stand_right");
     expect(animationKeysForAsset(guardAttention!)).toContain("guard_stand_left");
+  });
+
+  it("splits once-played rhythm actions into start, hit, and recover phases", () => {
+    const salute = level1SpriteAssets.find((asset) => asset.assetId === "wukong_salute_right");
+
+    expect(animationPhaseKeysForAsset(salute!)).toEqual({
+      start: "wukong_salute_right__start",
+      hit: "wukong_salute_right__hit",
+      recover: "wukong_salute_right__recover"
+    });
+
+    expect(frameKeysForAssetPhase(salute!, "start")).toEqual([
+      "wukong_salute_right_0001",
+      "wukong_salute_right_0002",
+      "wukong_salute_right_0003"
+    ]);
+    expect(frameKeysForAssetPhase(salute!, "hit")).toEqual([
+      "wukong_salute_right_0004",
+      "wukong_salute_right_0004"
+    ]);
+    expect(frameKeysForAssetPhase(salute!, "recover")).toEqual([
+      "wukong_salute_right_0005",
+      "wukong_salute_right_0006",
+      "wukong_salute_right_0007"
+    ]);
+  });
+
+  it("computes the lead-in timing needed to land the hit frame on beat", () => {
+    const attention = level1SpriteAssets.find((asset) => asset.assetId === "guard_attention_left");
+    const salute = level1SpriteAssets.find((asset) => asset.assetId === "guard_salute_left");
+    const idle = level1SpriteAssets.find((asset) => asset.assetId === "guard_idle_left");
+
+    expect(actionLeadInMsForAsset(attention!)).toBe(200);
+    expect(actionLeadInMsForAsset(salute!)).toBe(250);
+    expect(actionLeadInMsForAsset(idle!)).toBe(0);
   });
 });

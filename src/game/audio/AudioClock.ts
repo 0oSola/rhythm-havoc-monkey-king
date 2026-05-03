@@ -1,9 +1,15 @@
+export interface AudioClockContext {
+  currentTime: number;
+  state: AudioContextState;
+  resume(): Promise<void>;
+}
+
 export class AudioClock {
-  private readonly context: AudioContext;
+  readonly context: AudioClockContext;
   private startedAtSeconds = 0;
   private running = false;
 
-  constructor(context = new AudioContext()) {
+  constructor(context: AudioClockContext = new AudioContext()) {
     this.context = context;
   }
 

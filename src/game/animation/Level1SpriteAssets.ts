@@ -1,6 +1,7 @@
 export type Level1SpriteActor = "wukong" | "guard";
 export type Level1SpriteDirection = "right" | "left";
 export type Level1SpritePlayback = "loop" | "once";
+export type Level1SpriteActionPhase = "start" | "hit" | "recover";
 
 export interface Level1SpriteAsset {
   assetId: string;
@@ -123,6 +124,54 @@ export function frameKeysForAsset(asset: Level1SpriteAsset): string[] {
 
 export function animationKeysForAsset(asset: Level1SpriteAsset): string[] {
   return [asset.assetId, ...(asset.animationAliases ?? [])];
+}
+
+export function animationPhaseKeysForAsset(asset: Level1SpriteAsset): Record<Level1SpriteActionPhase, string> {
+  return {
+    start: `${asset.assetId}__start`,
+    hit: `${asset.assetId}__hit`,
+    recover: `${asset.assetId}__recover`
+  };
+}
+
+export function frameKeysForAssetPhase(
+  asset: Level1SpriteAsset,
+  phase: Level1SpriteActionPhase
+): string[] {
+  const frameKeys = frameKeysForAsset(asset);
+
+  if (asset.hitFrame === null) {
+    return frameKeys;
+  }
+
+  switch (phase) {
+    case "start":
+      return frameKeys.slice(0, Math.max(0, asset.hitFrame - 1));
+    case "hit": {
+      const hitKey = frameKeys[asset.hitFrame - 1];
+      return hitKey ? [hitKey, hitKey] : [];
+    }
+    case "recover":
+      return frameKeys.slice(asset.hitFrame);
+  }
+}
+
+export function actionLeadInMsForAsset(asset: Level1SpriteAsset): number {
+  if (asset.hitFrame === null) {
+    return 0;
+  }
+
+  return Math.round((Math.max(0, asset.hitFrame - 1) / asset.frameRate) * 1000);
+}
+
+export function findLevel1SpriteAsset(
+  actor: Level1SpriteActor,
+  action: string,
+  direction: Level1SpriteDirection
+): Level1SpriteAsset | undefined {
+  return level1SpriteAssets.find(
+    (asset) => asset.actor === actor && asset.action === action && asset.direction === direction
+  );
 }
 
 export function framePathForAsset(asset: Level1SpriteAsset, frameNumber: number): string {
