@@ -8,6 +8,7 @@ import {
   level1SpriteAssets
 } from "../animation/Level1SpriteAssets";
 import { LEVEL1_BACKGROUND_ENTRIES, LEVEL1_SOUND_ENTRIES } from "./Level1AssetCatalog";
+import { MENU_BACKGROUND_ENTRIES } from "./MenuAssetCatalog";
 
 const LEVEL1_FRAME_URLS = import.meta.glob(
   [
@@ -34,6 +35,7 @@ export class PreloadScene extends Phaser.Scene {
     this.loadLevel1Frames();
     this.loadLevel1Audio();
     this.loadLevel1Backgrounds();
+    this.loadMenuBackgrounds();
   }
 
   create(): void {
@@ -71,6 +73,12 @@ export class PreloadScene extends Phaser.Scene {
 
   private loadLevel1Backgrounds(): void {
     Object.entries(LEVEL1_BACKGROUND_ENTRIES).forEach(([key, url]) => {
+      this.load.image(key, url);
+    });
+  }
+
+  private loadMenuBackgrounds(): void {
+    Object.entries(MENU_BACKGROUND_ENTRIES).forEach(([key, url]) => {
       this.load.image(key, url);
     });
   }

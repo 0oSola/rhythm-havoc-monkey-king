@@ -17,6 +17,7 @@ import { parseLevelDefinition } from "../level/LevelLoader";
 import { createLevelResultPayload } from "../level/LevelResult";
 import gateLevelData from "../level/levels/gate_01.json";
 import type {
+  ExamPhaseDefinition,
   FreeTrainingPhaseDefinition,
   LevelActionId,
   LevelActor,
@@ -43,12 +44,26 @@ import {
   shouldRestartPracticeLoopAudio
 } from "./LevelPracticeLoopState";
 import { pointerEventForState } from "./LevelSceneInputRouting";
-import { ACTOR_LAYOUT, BUBBLE_LAYOUT, STAGE_SHADOWS } from "./LevelSceneLayout";
+import {
+  ACTOR_LAYOUT,
+  BUBBLE_LAYOUT,
+  openingRunInFlipXForActor,
+  STAGE_SHADOWS,
+  watchCueFlipXForActor
+} from "./LevelSceneLayout";
 import {
   bubbleActorForState,
   phaseAudioKeyForState,
   phaseBackgroundKeyForState
 } from "./LevelScenePresentation";
+import {
+  createExamCueWindows,
+  dialogueConfirmSfxKeyForState,
+  isFullHitBar,
+  practiceHandoffCueWindow,
+  practicePraiseCueTimeMs,
+  type ExamCueWindow
+} from "./LevelCueRules";
 
 export class LevelScene extends Phaser.Scene {
   private readonly animationController = new AnimationController();
@@ -83,6 +98,8 @@ export class LevelScene extends Phaser.Scene {
   private practicePlayerIndex = 0;
   private practiceLoopJudgements: JudgementResult[] = [];
   private practiceWarmupEndsAtMs?: number;
+  private practiceHandoffCueLoop = -1;
+  private practicePraiseCueLoop = -1;
 
   private examNpcEvents: readonly ExamTimelineEvent[] = [];
   private examPlayerEvents: readonly ExamTimelineEvent[] = [];
@@ -90,6 +107,11 @@ export class LevelScene extends Phaser.Scene {
   private examPlayerIndex = 0;
   private examJudgements: JudgementResult[] = [];
   private examCombo = 0;
+  private examCueWindows: readonly ExamCueWindow[] = [];
+  private examHandoffCueIndex = 0;
+  private examPraiseCueIndex = 0;
+  private readonly examBarJudgements = new Map<number, JudgementResult[]>();
+  private guardCueHoldUntilMs?: number;
 
   constructor() {
     super("LevelScene");
@@ -190,27 +212,32 @@ export class LevelScene extends Phaser.Scene {
     this.openingTitleText = this.add
       .text(480, 226, "南天门", {
         fontSize: "34px",
-        color: "#f8f8f4",
+        color: "#2f241c",
         fontStyle: "bold",
         fontFamily: "\"Microsoft YaHei\", \"PingFang SC\", sans-serif"
       })
       .setOrigin(0.5)
       .setDepth(21)
+      .setStroke("#f8f2dc", 8)
+      .setShadow(0, 4, "#f8f2dc", 8, false, true)
       .setVisible(false);
     this.openingCaptionText = this.add
       .text(480, 296, "", {
         fontSize: "20px",
-        color: "#f8f8f4",
+        color: "#2f241c",
         fontFamily: "\"Microsoft YaHei\", \"PingFang SC\", sans-serif",
         align: "center"
       })
       .setOrigin(0.5)
       .setDepth(21)
+      .setStroke("#fff7e8", 6)
+      .setShadow(0, 2, "#fff7e8", 6, false, true)
       .setVisible(false);
   }
 
   private handleKeyPress(key: RawInputKey): void {
     if (this.flowState.phaseType === "opening" && key === "A") {
+      this.playDialogueConfirmSfx();
       this.handleConfirm();
       return;
     }
@@ -236,6 +263,7 @@ export class LevelScene extends Phaser.Scene {
     this.syncPhaseAudioForState(state);
     if (state.phaseType !== "practice" && state.phaseType !== "exam") {
       this.clock = undefined;
+      this.clearGuardCueHold(true);
     }
     if (state.phaseType !== "practice") {
       this.practiceWarmupEndsAtMs = undefined;
@@ -320,6 +348,7 @@ export class LevelScene extends Phaser.Scene {
         this.guard?.setAlpha(0);
         this.wukong?.setAlpha(1);
         this.wukong?.setPosition(796, ACTOR_LAYOUT.wukong.y);
+        this.wukong?.setFlipX(openingRunInFlipXForActor("wukong"));
         this.wukong?.play("wukong_run_right", true);
         if (this.wukong) {
           this.tweens.killTweensOf(this.wukong);
@@ -374,6 +403,7 @@ export class LevelScene extends Phaser.Scene {
 
   private async enterPracticePhase(state: Extract<LevelFlowState, { phaseType: "practice" }>): Promise<void> {
     const phase = this.phaseById(state.currentPhaseId) as PracticePhaseDefinition;
+    this.clearGuardCueHold(true);
     this.guard?.play("guard_idle_left", true);
     this.wukong?.play("wukong_idle_right", true);
     this.configureOpeningOverlay(null);
@@ -392,6 +422,8 @@ export class LevelScene extends Phaser.Scene {
     this.practiceDemoIndex = 0;
     this.practicePlayerIndex = 0;
     this.practiceLoopJudgements = [];
+    this.practiceHandoffCueLoop = -1;
+    this.practicePraiseCueLoop = -1;
     this.clock = createSceneAudioClock(this.sound);
     await this.clock.start();
     this.showDialogueBubble("guard", this.practicePromptForPhase(phase, state.passCount));
@@ -403,6 +435,7 @@ export class LevelScene extends Phaser.Scene {
 
   private async enterExamPhase(_state: Extract<LevelFlowState, { phaseType: "exam" }>): Promise<void> {
     const timeline = createExamTimeline(this.level);
+    const examPhase = this.phaseById("exam") as ExamPhaseDefinition;
     this.configureOpeningOverlay(null);
     this.examNpcEvents = timeline.npcEvents;
     this.examPlayerEvents = timeline.playerEvents;
@@ -410,6 +443,11 @@ export class LevelScene extends Phaser.Scene {
     this.examPlayerIndex = 0;
     this.examJudgements = [];
     this.examCombo = 0;
+    this.examCueWindows = createExamCueWindows(examPhase);
+    this.examHandoffCueIndex = 0;
+    this.examPraiseCueIndex = 0;
+    this.examBarJudgements.clear();
+    this.clearGuardCueHold(true);
     this.clock = createSceneAudioClock(this.sound);
     await this.clock.start();
     this.showDialogueBubble("guard", "正式考核开始。先听，再跟。");
@@ -491,6 +529,8 @@ export class LevelScene extends Phaser.Scene {
       this.applyPracticeInput(phase, input.type, input.timeMs)
     );
     this.expirePracticeEvents(phase, elapsedMs);
+    this.updatePracticeCueState(phase, elapsedMs);
+    this.releaseGuardCueIfExpired(elapsedMs);
 
     const currentLoopEndMs = (this.practiceLoopIndex + 1) * phase.loopDurationMs;
     if (elapsedMs >= currentLoopEndMs) {
@@ -597,6 +637,9 @@ export class LevelScene extends Phaser.Scene {
     this.practiceDemoIndex = 0;
     this.practicePlayerIndex = 0;
     this.practiceLoopJudgements = [];
+    this.practiceHandoffCueLoop = -1;
+    this.practicePraiseCueLoop = -1;
+    this.clearGuardCueHold(false);
     if (shouldRestartPracticeLoopAudio(previousState, nextState)) {
       this.restartCurrentPhaseAudio();
     }
@@ -612,6 +655,26 @@ export class LevelScene extends Phaser.Scene {
     this.wukong?.play("wukong_idle_right", true);
   }
 
+  private updatePracticeCueState(phase: PracticePhaseDefinition, elapsedMs: number): void {
+    const handoffCue = practiceHandoffCueWindow(phase, this.practiceLoopIndex);
+    if (this.practiceHandoffCueLoop !== this.practiceLoopIndex && elapsedMs >= handoffCue.triggerTimeMs) {
+      this.practiceHandoffCueLoop = this.practiceLoopIndex;
+      this.startGuardWatchCue(handoffCue.sustainUntilMs);
+      this.hud?.setFeedback("轮到你了", "#ffd166");
+    }
+
+    const praiseCueTimeMs = practicePraiseCueTimeMs(phase, this.practiceLoopIndex);
+    if (this.practicePraiseCueLoop !== this.practiceLoopIndex && elapsedMs >= praiseCueTimeMs) {
+      this.practicePraiseCueLoop = this.practiceLoopIndex;
+      if (
+        this.practiceLoopJudgements.length >= phase.playerEvents.length &&
+        isFullHitBar(this.practiceLoopJudgements.slice(0, phase.playerEvents.length))
+      ) {
+        this.playGuardPraiseCue();
+      }
+    }
+  }
+
   private updateExamPhase(): void {
     if (!this.clock || this.flowState.phaseType !== "exam") {
       return;
@@ -621,6 +684,8 @@ export class LevelScene extends Phaser.Scene {
     this.playDueExamNpcEvents(elapsedMs);
     this.flushPendingInputs(elapsedMs, (input) => this.applyExamInput(input.type, input.timeMs));
     this.expireExamEvents(elapsedMs);
+    this.updateExamCueState(elapsedMs);
+    this.releaseGuardCueIfExpired(elapsedMs);
 
     if (this.examPlayerIndex >= this.examPlayerEvents.length && this.examPlayerEvents.length > 0) {
       const lastTargetTimeMs = this.examPlayerEvents[this.examPlayerEvents.length - 1].timeMs;
@@ -629,6 +694,33 @@ export class LevelScene extends Phaser.Scene {
           phaseType: "result",
           currentPhaseId: "result"
         });
+      }
+    }
+  }
+
+  private updateExamCueState(elapsedMs: number): void {
+    while (this.examHandoffCueIndex < this.examCueWindows.length) {
+      const cue = this.examCueWindows[this.examHandoffCueIndex];
+      if (elapsedMs < cue.handoffTimeMs) {
+        break;
+      }
+
+      this.examHandoffCueIndex += 1;
+      this.startGuardWatchCue(cue.playerBarEndTimeMs);
+      this.hud?.setFeedback("轮到你了", "#ffd166");
+    }
+
+    while (this.examPraiseCueIndex < this.examCueWindows.length) {
+      const cue = this.examCueWindows[this.examPraiseCueIndex];
+      if (elapsedMs < cue.praiseTimeMs) {
+        break;
+      }
+
+      this.examPraiseCueIndex += 1;
+      const judgements = this.examBarJudgements.get(cue.playerBar) ?? [];
+      const expectedHits = this.examPlayerEvents.filter((event) => event.bar === cue.playerBar).length;
+      if (judgements.length >= expectedHits && isFullHitBar(judgements.slice(0, expectedHits))) {
+        this.playGuardPraiseCue();
       }
     }
   }
@@ -666,6 +758,7 @@ export class LevelScene extends Phaser.Scene {
 
     this.examPlayerIndex += 1;
     this.examJudgements.push(judgement.result);
+    this.pushExamBarJudgement(event.bar, judgement.result);
     this.examCombo = judgement.result === "MISS" ? 0 : this.examCombo + 1;
     this.playPlayerJudgement(
       event.actionId,
@@ -693,6 +786,7 @@ export class LevelScene extends Phaser.Scene {
 
       this.examPlayerIndex += 1;
       this.examJudgements.push("MISS");
+      this.pushExamBarJudgement(event.bar, "MISS");
       this.examCombo = 0;
       this.playPlayerJudgement(event.actionId, "MISS", { kind: "miss-no-input" });
       this.hud?.setFeedback("MISS", "#ff6b6b");
@@ -722,6 +816,48 @@ export class LevelScene extends Phaser.Scene {
     const action = actionNameForActionId(actionId);
     const direction = actor === "guard" ? "left" : "right";
     this.animationController.playReactiveAction(sprite, actor, action, direction);
+  }
+
+  private startGuardWatchCue(sustainUntilMs: number): void {
+    if (!this.guard) {
+      return;
+    }
+
+    this.guardCueHoldUntilMs = sustainUntilMs;
+    this.guard.setFlipX(watchCueFlipXForActor("guard"));
+    if (this.guard.anims.animationManager.exists("guard_watch_left")) {
+      this.guard.play("guard_watch_left", true);
+      return;
+    }
+
+    this.guard.play("guard_idle_left", true);
+  }
+
+  private releaseGuardCueIfExpired(elapsedMs: number): void {
+    if (this.guardCueHoldUntilMs === undefined || elapsedMs < this.guardCueHoldUntilMs) {
+      return;
+    }
+
+    this.clearGuardCueHold(true);
+  }
+
+  private clearGuardCueHold(forceIdle: boolean): void {
+    this.guardCueHoldUntilMs = undefined;
+
+    if (forceIdle) {
+      this.guard?.play("guard_idle_left", true);
+    }
+  }
+
+  private playGuardPraiseCue(): void {
+    this.clearGuardCueHold(false);
+    if (this.guard) {
+      this.guard.setFlipX(ACTOR_LAYOUT.guard.flipX);
+      this.animationController.playReactiveAction(this.guard, "guard", "salute", "left");
+    }
+
+    this.sound.play("PLAYER-correct.wav", { volume: 0.8 });
+    this.hud?.setFeedback("门卫认可", "#caffbf");
   }
 
   private playPlayerJudgement(
@@ -756,6 +892,21 @@ export class LevelScene extends Phaser.Scene {
     }
 
     this.sound.play(key, { volume: 0.7 });
+  }
+
+  private playDialogueConfirmSfx(): void {
+    const sfxKey = dialogueConfirmSfxKeyForState(this.level, this.flowState);
+    if (!sfxKey) {
+      return;
+    }
+
+    this.sound.play(sfxKey, { volume: 0.75 });
+  }
+
+  private pushExamBarJudgement(bar: number, judgement: JudgementResult): void {
+    const judgements = this.examBarJudgements.get(bar) ?? [];
+    judgements.push(judgement);
+    this.examBarJudgements.set(bar, judgements);
   }
 
   private leadInMsForAction(actor: LevelActor, actionId: LevelActionId): number {

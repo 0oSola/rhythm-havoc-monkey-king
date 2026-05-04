@@ -1,33 +1,38 @@
 import Phaser from "phaser";
+import {
+  MENU_BACKGROUND_KEY,
+  MENU_CANVAS_HEIGHT,
+  MENU_CANVAS_WIDTH,
+  START_BUTTON_BOUNDS
+} from "./MenuSceneConfig";
 
 export class MenuScene extends Phaser.Scene {
+  private startButtonZone?: Phaser.GameObjects.Zone;
+
   constructor() {
     super("MenuScene");
   }
 
   create(): void {
-    this.add.rectangle(480, 270, 960, 540, 0x1f1712);
     this.add
-      .text(480, 164, "西游滴打咚", {
-        color: "#ffd166",
-        fontSize: "52px",
-        fontStyle: "bold"
-      })
-      .setOrigin(0.5);
-    this.add
-      .text(480, 238, "用节奏控制行为，用行为推动喜剧", {
-        color: "#f7efe0",
-        fontSize: "22px"
-      })
-      .setOrigin(0.5);
-    this.add
-      .text(480, 376, "按 Space 查看关卡重构占位页", {
-        color: "#d8c7a3",
-        fontSize: "20px"
-      })
-      .setOrigin(0.5);
+      .image(MENU_CANVAS_WIDTH / 2, MENU_CANVAS_HEIGHT / 2, MENU_BACKGROUND_KEY)
+      .setDisplaySize(MENU_CANVAS_WIDTH, MENU_CANVAS_HEIGHT);
+
+    this.startButtonZone = this.add
+      .zone(
+        START_BUTTON_BOUNDS.x + START_BUTTON_BOUNDS.width / 2,
+        START_BUTTON_BOUNDS.y + START_BUTTON_BOUNDS.height / 2,
+        START_BUTTON_BOUNDS.width,
+        START_BUTTON_BOUNDS.height
+      )
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    this.startButtonZone.on("pointerup", () => {
+      this.scene.start("LevelScene");
+    });
 
     this.input.keyboard?.once("keydown-SPACE", () => this.scene.start("LevelScene"));
-    this.input.once("pointerdown", () => this.scene.start("LevelScene"));
+    this.input.keyboard?.once("keydown-ENTER", () => this.scene.start("LevelScene"));
   }
 }

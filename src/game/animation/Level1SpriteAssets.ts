@@ -23,7 +23,7 @@ export const level1SpriteAssets: readonly Level1SpriteAsset[] = [
     actor: "wukong",
     action: "idle",
     direction: "right",
-    frameCount: 4,
+    frameCount: 2,
     playback: "loop",
     frameRate: 6,
     hitFrame: null,
@@ -35,7 +35,7 @@ export const level1SpriteAssets: readonly Level1SpriteAsset[] = [
     actor: "guard",
     action: "idle",
     direction: "left",
-    frameCount: 6,
+    frameCount: 2,
     playback: "loop",
     frameRate: 6,
     hitFrame: null,
@@ -60,10 +60,10 @@ export const level1SpriteAssets: readonly Level1SpriteAsset[] = [
     actor: "guard",
     action: "attention",
     direction: "left",
-    frameCount: 4,
+    frameCount: 7,
     playback: "once",
-    frameRate: 10,
-    hitFrame: 3,
+    frameRate: 12,
+    hitFrame: 4,
     sourceSheet: "level1_attention_dual_sheet.png",
     outputDirectory: "level1/guard/attention",
     animationAliases: ["guard_stand_left"]
@@ -90,7 +90,20 @@ export const level1SpriteAssets: readonly Level1SpriteAsset[] = [
     frameRate: 12,
     hitFrame: 4,
     sourceSheet: "level1_salute_dual_sheet.png",
-    outputDirectory: "level1/guard/salute"
+    outputDirectory: "level1/guard/salute",
+    animationAliases: ["guard_praise_left"]
+  },
+  {
+    assetId: "guard_watch_left",
+    actor: "guard",
+    action: "watch",
+    direction: "left",
+    frameCount: 2,
+    playback: "loop",
+    frameRate: 6,
+    hitFrame: null,
+    sourceSheet: "guard_watch_left_sheet.png",
+    outputDirectory: "level1/guard/watch"
   },
   {
     assetId: "wukong_run_right",

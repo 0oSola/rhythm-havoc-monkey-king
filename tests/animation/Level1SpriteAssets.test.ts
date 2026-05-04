@@ -9,7 +9,7 @@ import {
 } from "../../src/game/animation/Level1SpriteAssets";
 
 describe("Level1SpriteAssets", () => {
-  it("defines the eight level 1 animation assets needed for the prototype", () => {
+  it("defines the nine level 1 animation assets needed for gameplay and npc cueing", () => {
     expect(level1SpriteAssets.map((asset) => asset.assetId)).toEqual([
       "wukong_idle_right",
       "guard_idle_left",
@@ -17,14 +17,20 @@ describe("Level1SpriteAssets", () => {
       "guard_attention_left",
       "wukong_salute_right",
       "guard_salute_left",
+      "guard_watch_left",
       "wukong_run_right",
       "wukong_fail_right"
     ]);
   });
 
   it("keeps the agreed frame counts and hit frames", () => {
+    expect(level1SpriteAssets.find((asset) => asset.assetId === "wukong_idle_right")).toMatchObject({
+      frameCount: 2,
+      hitFrame: null
+    });
+
     expect(level1SpriteAssets.find((asset) => asset.assetId === "guard_idle_left")).toMatchObject({
-      frameCount: 6,
+      frameCount: 2,
       hitFrame: null
     });
 
@@ -38,6 +44,17 @@ describe("Level1SpriteAssets", () => {
       frameCount: 7,
       hitFrame: 4,
       sourceSheet: "level1_salute_dual_sheet.png"
+    });
+
+    expect(level1SpriteAssets.find((asset) => asset.assetId === "guard_attention_left")).toMatchObject({
+      frameCount: 7,
+      hitFrame: 4,
+      sourceSheet: "level1_attention_dual_sheet.png"
+    });
+
+    expect(level1SpriteAssets.find((asset) => asset.assetId === "guard_watch_left")).toMatchObject({
+      playback: "loop",
+      hitFrame: null
     });
 
     expect(level1SpriteAssets.find((asset) => asset.assetId === "wukong_run_right")).toMatchObject({
@@ -68,12 +85,14 @@ describe("Level1SpriteAssets", () => {
     ]);
   });
 
-  it("preserves the old stand animation aliases for attention actions", () => {
+  it("preserves aliases for attention stand and praise playback", () => {
     const wukongAttention = level1SpriteAssets.find((asset) => asset.assetId === "wukong_attention_right");
     const guardAttention = level1SpriteAssets.find((asset) => asset.assetId === "guard_attention_left");
+    const guardSalute = level1SpriteAssets.find((asset) => asset.assetId === "guard_salute_left");
 
     expect(animationKeysForAsset(wukongAttention!)).toContain("wukong_stand_right");
     expect(animationKeysForAsset(guardAttention!)).toContain("guard_stand_left");
+    expect(animationKeysForAsset(guardSalute!)).toContain("guard_praise_left");
   });
 
   it("splits once-played rhythm actions into start, hit, and recover phases", () => {

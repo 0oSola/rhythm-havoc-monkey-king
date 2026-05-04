@@ -1,0 +1,4 @@
+interface:
+  display_name: "GIF Action Replace"
+  short_description: "Replace GIF actions with normalized Phaser frames."
+  default_prompt: "Use $level-gif-action-replacement to replace a character GIF with normalized Phaser runtime frames in this repo."

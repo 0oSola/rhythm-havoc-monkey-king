@@ -45,3 +45,11 @@ export const BUBBLE_LAYOUT: Record<LevelActor, BubbleLayout> = {
     tailDirection: "left"
   }
 };
+
+export function watchCueFlipXForActor(actor: LevelActor): boolean {
+  return actor === "guard" ? !ACTOR_LAYOUT.guard.flipX : ACTOR_LAYOUT.wukong.flipX;
+}
+
+export function openingRunInFlipXForActor(actor: LevelActor): boolean {
+  return actor === "wukong" ? !ACTOR_LAYOUT.wukong.flipX : ACTOR_LAYOUT.guard.flipX;
+}

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { ACTOR_LAYOUT, BUBBLE_LAYOUT } from "../../src/game/scenes/LevelSceneLayout";
+import {
+  ACTOR_LAYOUT,
+  BUBBLE_LAYOUT,
+  openingRunInFlipXForActor,
+  watchCueFlipXForActor
+} from "../../src/game/scenes/LevelSceneLayout";
 
 describe("LevelSceneLayout", () => {
   it("places the guard on the left and wukong on the right", () => {
@@ -9,6 +14,14 @@ describe("LevelSceneLayout", () => {
   it("keeps the guard mirrored and wukong on the original facing for the swapped staging", () => {
     expect(ACTOR_LAYOUT.guard.flipX).toBe(true);
     expect(ACTOR_LAYOUT.wukong.flipX).toBe(false);
+  });
+
+  it("reverses the guard facing during the watch cue", () => {
+    expect(watchCueFlipXForActor("guard")).toBe(false);
+  });
+
+  it("reverses wukong facing during the opening run-in", () => {
+    expect(openingRunInFlipXForActor("wukong")).toBe(true);
   });
 
   it("keeps each dialogue bubble near its actor", () => {
