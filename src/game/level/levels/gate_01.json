@@ -1,0 +1,484 @@
+{
+  "levelId": "gate_01",
+  "name": "南天门 · 混进天庭",
+  "bpm": 100,
+  "type": "teaching",
+  "audio": {
+    "practiceKey": "level1_attention_practice_bgm",
+    "examKey": "level1_exam_bgm_0503"
+  },
+  "actions": {
+    "ATTENTION": {
+      "name": "立正",
+      "inputType": "A",
+      "animationKey": "wukong_attention_right",
+      "playerSfxKey": "立正.wav"
+    },
+    "SALUTE": {
+      "name": "敬礼",
+      "inputType": "AB",
+      "animationKey": "wukong_salute_right",
+      "playerSfxKey": "敬礼.wav"
+    }
+  },
+  "phases": [
+    {
+      "id": "opening",
+      "type": "opening",
+      "backgroundKey": "level1-opening-bg",
+      "steps": [
+        {
+          "kind": "story-caption",
+          "text": "故事要从玉帝宣孙悟空上天做官开始说起……",
+          "autoAdvanceAfterMs": 1800
+        },
+        {
+          "kind": "story-caption",
+          "text": "这天悟空来报到，却见南天门口排着长队，不知道在查什么。",
+          "autoAdvanceAfterMs": 2200
+        },
+        {
+          "kind": "story-caption",
+          "text": "孙悟空挠挠头：“俺来当天官，还得在这儿排队？”",
+          "autoAdvanceAfterMs": 2200
+        },
+        {
+          "kind": "story-caption",
+          "text": "他眼珠一转，既然没人看见……",
+          "autoAdvanceAfterMs": 1800
+        },
+        {
+          "kind": "story-caption",
+          "text": "先溜进去再说！",
+          "requireConfirm": true
+        },
+        { "kind": "wukong-run-in" },
+        { "kind": "guard-reveal" },
+        { "kind": "dialogue", "speaker": "guard", "text": "Oi——什么人？" },
+        { "kind": "dialogue", "speaker": "wukong", "text": "俺是堂堂花果山水帘洞美猴王孙——" },
+        {
+          "kind": "dialogue",
+          "speaker": "guard",
+          "text": "管你是谁，要过南天门，先跟我学礼仪 (｀Д´)"
+        },
+        { "kind": "dialogue", "speaker": "wukong", "text": "啊？什么礼仪？" }
+      ],
+      "nextPhaseId": "attention_free"
+    },
+    {
+      "id": "attention_free",
+      "type": "free",
+      "backgroundKey": "level1-stage-bg",
+      "prompt": "你先学会立正，按A",
+      "actionId": "ATTENTION",
+      "requiredCount": 4,
+      "milestones": [
+        { "count": 1, "text": "就是这样，再按几次，我们就跟节奏来。" }
+      ],
+      "nextPhaseId": "attention_rhythm"
+    },
+    {
+      "id": "attention_rhythm",
+      "type": "practice",
+      "backgroundKey": "level1-stage-bg",
+      "promptTemplate": "跟着我的节奏来，还有{n}次。",
+      "warmupAudioKey": "level1_practice_ready_bgm",
+      "warmupDurationMs": 2400,
+      "audioKey": "level1_attention_practice_bgm",
+      "bpm": 100,
+      "timeSignature": [4, 4],
+      "beatMs": 600,
+      "barMs": 2400,
+      "loopBars": 2,
+      "loopDurationMs": 4800,
+      "requiredPassCount": 3,
+      "passThreshold": "GOOD",
+      "npcEvents": [
+        { "timeMs": 0, "bar": 1, "beat": 1, "actionId": "ATTENTION" },
+        { "timeMs": 1200, "bar": 1, "beat": 3, "actionId": "ATTENTION" }
+      ],
+      "playerEvents": [
+        { "timeMs": 2400, "bar": 2, "beat": 1, "actionId": "ATTENTION" },
+        { "timeMs": 3600, "bar": 2, "beat": 3, "actionId": "ATTENTION" }
+      ],
+      "nextPhaseId": "salute_free"
+    },
+    {
+      "id": "salute_free",
+      "type": "free",
+      "backgroundKey": "level1-stage-bg",
+      "prompt": "不错，还算有天赋，接下来跟我学敬礼，同时按A和S。",
+      "actionId": "SALUTE",
+      "requiredCount": 3,
+      "milestones": [
+        { "count": 3, "text": "就是这样，那么，跟节奏来吧。" }
+      ],
+      "nextPhaseId": "salute_rhythm"
+    },
+    {
+      "id": "salute_rhythm",
+      "type": "practice",
+      "backgroundKey": "level1-stage-bg",
+      "promptTemplate": "注意我的节奏，还有{n}次。",
+      "warmupAudioKey": "level1_practice_ready_bgm",
+      "warmupDurationMs": 2400,
+      "audioKey": "level1_salute_practice_bgm",
+      "bpm": 100,
+      "timeSignature": [4, 4],
+      "beatMs": 600,
+      "barMs": 2400,
+      "loopBars": 2,
+      "loopDurationMs": 4800,
+      "requiredPassCount": 3,
+      "passThreshold": "GOOD",
+      "npcEvents": [
+        { "timeMs": 0, "bar": 1, "beat": 1, "actionId": "SALUTE" },
+        { "timeMs": 1200, "bar": 1, "beat": 3, "actionId": "SALUTE" }
+      ],
+      "playerEvents": [
+        { "timeMs": 2400, "bar": 2, "beat": 1, "actionId": "SALUTE" },
+        { "timeMs": 3600, "bar": 2, "beat": 3, "actionId": "SALUTE" }
+      ],
+      "nextPhaseId": "exam"
+    },
+    {
+      "id": "exam",
+      "type": "exam",
+      "backgroundKey": "level1-stage-bg",
+      "audioKey": "level1_exam_bgm_0503",
+      "bpm": 100,
+      "timeSignature": [4, 4],
+      "beatMs": 600,
+      "barMs": 2400,
+      "totalBars": 34,
+      "bars": [
+        { "bar": 1, "role": "NONE", "startTimeMs": 0, "endTimeMs": 2400, "events": [] },
+        { "bar": 2, "role": "NONE", "startTimeMs": 2400, "endTimeMs": 4800, "events": [] },
+        {
+          "bar": 3,
+          "role": "NPC",
+          "startTimeMs": 4800,
+          "endTimeMs": 7200,
+          "events": [
+            { "beat": 1, "timeMs": 4800, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 6000, "actionId": "ATTENTION" }
+          ]
+        },
+        {
+          "bar": 4,
+          "role": "PLAYER",
+          "startTimeMs": 7200,
+          "endTimeMs": 9600,
+          "events": [
+            { "beat": 1, "timeMs": 7200, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 8400, "actionId": "ATTENTION" }
+          ]
+        },
+        {
+          "bar": 5,
+          "role": "NPC",
+          "startTimeMs": 9600,
+          "endTimeMs": 12000,
+          "events": [
+            { "beat": 1, "timeMs": 9600, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 10800, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 6,
+          "role": "PLAYER",
+          "startTimeMs": 12000,
+          "endTimeMs": 14400,
+          "events": [
+            { "beat": 1, "timeMs": 12000, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 13200, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 7,
+          "role": "NPC",
+          "startTimeMs": 14400,
+          "endTimeMs": 16800,
+          "events": [
+            { "beat": 1, "timeMs": 14400, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 15300, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 15600, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 8,
+          "role": "PLAYER",
+          "startTimeMs": 16800,
+          "endTimeMs": 19200,
+          "events": [
+            { "beat": 1, "timeMs": 16800, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 17700, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 18000, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 9,
+          "role": "NPC",
+          "startTimeMs": 19200,
+          "endTimeMs": 21600,
+          "events": [
+            { "beat": 1, "timeMs": 19200, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 20100, "actionId": "SALUTE" },
+            { "beat": 4, "timeMs": 21000, "actionId": "ATTENTION" }
+          ]
+        },
+        {
+          "bar": 10,
+          "role": "PLAYER",
+          "startTimeMs": 21600,
+          "endTimeMs": 24000,
+          "events": [
+            { "beat": 1, "timeMs": 21600, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 22500, "actionId": "SALUTE" },
+            { "beat": 4, "timeMs": 23400, "actionId": "ATTENTION" }
+          ]
+        },
+        {
+          "bar": 11,
+          "role": "NPC",
+          "startTimeMs": 24000,
+          "endTimeMs": 26400,
+          "events": [
+            { "beat": 1, "timeMs": 24000, "actionId": "SALUTE" },
+            { "beat": 3, "timeMs": 25200, "actionId": "ATTENTION" }
+          ]
+        },
+        {
+          "bar": 12,
+          "role": "PLAYER",
+          "startTimeMs": 26400,
+          "endTimeMs": 28800,
+          "events": [
+            { "beat": 1, "timeMs": 26400, "actionId": "SALUTE" },
+            { "beat": 3, "timeMs": 27600, "actionId": "ATTENTION" }
+          ]
+        },
+        {
+          "bar": 13,
+          "role": "NPC",
+          "startTimeMs": 28800,
+          "endTimeMs": 31200,
+          "events": [
+            { "beat": 1, "timeMs": 28800, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 29700, "actionId": "ATTENTION" },
+            { "beat": 4, "timeMs": 30600, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 14,
+          "role": "PLAYER",
+          "startTimeMs": 31200,
+          "endTimeMs": 33600,
+          "events": [
+            { "beat": 1, "timeMs": 31200, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 32100, "actionId": "ATTENTION" },
+            { "beat": 4, "timeMs": 33000, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 15,
+          "role": "NPC",
+          "startTimeMs": 33600,
+          "endTimeMs": 36000,
+          "events": [
+            { "beat": 1, "timeMs": 33600, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 34800, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 16,
+          "role": "PLAYER",
+          "startTimeMs": 36000,
+          "endTimeMs": 38400,
+          "events": [
+            { "beat": 1, "timeMs": 36000, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 37200, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 17,
+          "role": "NPC",
+          "startTimeMs": 38400,
+          "endTimeMs": 40800,
+          "events": [
+            { "beat": 1, "timeMs": 38400, "actionId": "ATTENTION" },
+            { "beat": 2, "timeMs": 39000, "actionId": "SALUTE" },
+            { "beat": 3.5, "timeMs": 39900, "actionId": "ATTENTION" }
+          ]
+        },
+        {
+          "bar": 18,
+          "role": "PLAYER",
+          "startTimeMs": 40800,
+          "endTimeMs": 43200,
+          "events": [
+            { "beat": 1, "timeMs": 40800, "actionId": "ATTENTION" },
+            { "beat": 2, "timeMs": 41400, "actionId": "SALUTE" },
+            { "beat": 3.5, "timeMs": 42300, "actionId": "ATTENTION" }
+          ]
+        },
+        {
+          "bar": 19,
+          "role": "NPC",
+          "startTimeMs": 43200,
+          "endTimeMs": 45600,
+          "events": [
+            { "beat": 1, "timeMs": 43200, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 44400, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 20,
+          "role": "PLAYER",
+          "startTimeMs": 45600,
+          "endTimeMs": 48000,
+          "events": [
+            { "beat": 1, "timeMs": 45600, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 46800, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 21,
+          "role": "NPC",
+          "startTimeMs": 48000,
+          "endTimeMs": 50400,
+          "events": [
+            { "beat": 1, "timeMs": 48000, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 48900, "actionId": "ATTENTION" },
+            { "beat": 4, "timeMs": 49800, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 22,
+          "role": "PLAYER",
+          "startTimeMs": 50400,
+          "endTimeMs": 52800,
+          "events": [
+            { "beat": 1, "timeMs": 50400, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 51300, "actionId": "ATTENTION" },
+            { "beat": 4, "timeMs": 52200, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 23,
+          "role": "NPC",
+          "startTimeMs": 52800,
+          "endTimeMs": 55200,
+          "events": [
+            { "beat": 1, "timeMs": 52800, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 53700, "actionId": "SALUTE" },
+            { "beat": 4, "timeMs": 54600, "actionId": "ATTENTION" }
+          ]
+        },
+        {
+          "bar": 24,
+          "role": "PLAYER",
+          "startTimeMs": 55200,
+          "endTimeMs": 57600,
+          "events": [
+            { "beat": 1, "timeMs": 55200, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 56100, "actionId": "SALUTE" },
+            { "beat": 4, "timeMs": 57000, "actionId": "ATTENTION" }
+          ]
+        },
+        { "bar": 25, "role": "NONE", "startTimeMs": 57600, "endTimeMs": 60000, "events": [] },
+        { "bar": 26, "role": "NONE", "startTimeMs": 60000, "endTimeMs": 62400, "events": [] },
+        {
+          "bar": 27,
+          "role": "NPC",
+          "startTimeMs": 62400,
+          "endTimeMs": 64800,
+          "events": [
+            { "beat": 1, "timeMs": 62400, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 63600, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 28,
+          "role": "PLAYER",
+          "startTimeMs": 64800,
+          "endTimeMs": 67200,
+          "events": [
+            { "beat": 1, "timeMs": 64800, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 66000, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 29,
+          "role": "NPC",
+          "startTimeMs": 67200,
+          "endTimeMs": 69600,
+          "events": [
+            { "beat": 1, "timeMs": 67200, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 68100, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 68400, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 30,
+          "role": "PLAYER",
+          "startTimeMs": 69600,
+          "endTimeMs": 72000,
+          "events": [
+            { "beat": 1, "timeMs": 69600, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 70500, "actionId": "ATTENTION" },
+            { "beat": 3, "timeMs": 70800, "actionId": "SALUTE" }
+          ]
+        },
+        {
+          "bar": 31,
+          "role": "NPC",
+          "startTimeMs": 72000,
+          "endTimeMs": 74400,
+          "events": [
+            { "beat": 1, "timeMs": 72000, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 72900, "actionId": "SALUTE" },
+            { "beat": 4, "timeMs": 73800, "actionId": "ATTENTION" }
+          ]
+        },
+        {
+          "bar": 32,
+          "role": "PLAYER",
+          "startTimeMs": 74400,
+          "endTimeMs": 76800,
+          "events": [
+            { "beat": 1, "timeMs": 74400, "actionId": "ATTENTION" },
+            { "beat": 2.5, "timeMs": 75300, "actionId": "SALUTE" },
+            { "beat": 4, "timeMs": 76200, "actionId": "ATTENTION" }
+          ]
+        },
+        {
+          "bar": 33,
+          "role": "NPC",
+          "startTimeMs": 76800,
+          "endTimeMs": 79200,
+          "events": [
+            { "beat": 1, "timeMs": 76800, "actionId": "SALUTE" },
+            { "beat": 3, "timeMs": 78000, "actionId": "ATTENTION" }
+          ]
+        },
+        {
+          "bar": 34,
+          "role": "PLAYER",
+          "startTimeMs": 79200,
+          "endTimeMs": 81600,
+          "events": [
+            { "beat": 1, "timeMs": 79200, "actionId": "SALUTE" },
+            { "beat": 3, "timeMs": 80400, "actionId": "ATTENTION" }
+          ]
+        }
+      ]
+    }
+  ],
+  "resultTexts": {
+    "天尊": "好！此人可替我值班！",
+    "真仙": "不错，像练过的。",
+    "道童": "手脚倒是齐全。",
+    "凡夫": "来人，把他叉出去！"
+  }
+}
