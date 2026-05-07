@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   ACTOR_LAYOUT,
   BUBBLE_LAYOUT,
+  GUARD_PRAISE_IDLE_REPOSITION_DELAY_MS,
   GUARD_PRAISE_OFFSET_X,
+  GUARD_PRAISE_OFFSET_Y,
   OPENING_RUN_IN_DURATION_MS,
   openingRunInFlipXForActor,
   watchCueFlipXForActor
@@ -30,8 +32,10 @@ describe("LevelSceneLayout", () => {
     expect(OPENING_RUN_IN_DURATION_MS).toBe(2400);
   });
 
-  it("nudges the praise art slightly right so the left foot stays aligned with guard idle", () => {
-    expect(GUARD_PRAISE_OFFSET_X).toBe(30);
+  it("aligns praise to idle using the lower-body anchor instead of the full image bounds", () => {
+    expect(GUARD_PRAISE_OFFSET_X).toBe(23.5);
+    expect(GUARD_PRAISE_OFFSET_Y).toBe(1.5);
+    expect(GUARD_PRAISE_IDLE_REPOSITION_DELAY_MS).toBe(300);
   });
 
   it("keeps each dialogue bubble near its actor", () => {

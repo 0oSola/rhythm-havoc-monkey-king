@@ -190,6 +190,10 @@ export function actionLeadInMsForAsset(asset: Level1SpriteAsset): number {
   return Math.round((Math.max(0, asset.hitFrame - 1) / asset.frameRate) * 1000);
 }
 
+export function playbackDurationMsForAsset(asset: Level1SpriteAsset): number {
+  return Math.round((asset.frameCount / asset.frameRate) * 1000);
+}
+
 export function findLevel1SpriteAsset(
   actor: Level1SpriteActor,
   action: string,

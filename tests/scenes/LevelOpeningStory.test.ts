@@ -9,6 +9,7 @@ import {
   openingAdvanceSfxKeyForStep,
   openingDisplayTextForStep,
   openingRevealSfxKeyForStep,
+  openingShouldForceIdleReset,
   openingShouldUseBeatMatchedIdleLoop,
   openingShouldAutoAdvanceAfterAnimation,
   openingShouldAcceptAdvanceKey,
@@ -159,5 +160,17 @@ describe("LevelOpeningStory", () => {
     expect(openingStoryTopY(steps)).toBe(88);
     expect(OPENING_CONTINUE_PROMPT_FONT_SIZE_PX).toBe(14);
     expect(OPENING_CONTINUE_PROMPT_COLOR).toBe("#8e8e8e");
+  });
+
+  it("forces opening dialogue beats to reset actors back to idle", () => {
+    expect(openingShouldForceIdleReset({ kind: "wukong-run-in" })).toBe(false);
+    expect(openingShouldForceIdleReset({ kind: "guard-reveal" })).toBe(false);
+    expect(
+      openingShouldForceIdleReset({
+        kind: "dialogue",
+        speaker: "guard",
+        text: "Oi"
+      })
+    ).toBe(true);
   });
 });

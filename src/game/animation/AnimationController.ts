@@ -28,7 +28,14 @@ export function animationKeyForJudgement(
   return animationKeyForAction(actor, action, direction);
 }
 
+type SpriteAnimationState = {
+  isBusy: boolean;
+  queue: Array<() => void>;
+};
+
 export class AnimationController {
+  private readonly spriteStates = new WeakMap<Phaser.GameObjects.Sprite, SpriteAnimationState>();
+
   playTelegraphedAction(
     sprite: Phaser.GameObjects.Sprite,
     actor: string,
@@ -42,11 +49,13 @@ export class AnimationController {
       animationKeyForActionPhase(actor, action, direction, "recover")
     ];
 
-    if (this.playSequence(sprite, sequence, idleKey)) {
-      return;
-    }
+    this.enqueueOrRun(sprite, () => {
+      if (this.playSequence(sprite, sequence, idleKey)) {
+        return;
+      }
 
-    this.playAction(sprite, actor, action, direction);
+      this.playActionNow(sprite, actor, action, direction, idleKey);
+    });
   }
 
   playReactiveAction(
@@ -61,11 +70,13 @@ export class AnimationController {
       animationKeyForActionPhase(actor, action, direction, "recover")
     ];
 
-    if (this.playSequence(sprite, sequence, idleKey)) {
-      return;
-    }
+    this.enqueueOrRun(sprite, () => {
+      if (this.playSequence(sprite, sequence, idleKey)) {
+        return;
+      }
 
-    this.playAction(sprite, actor, action, direction);
+      this.playActionNow(sprite, actor, action, direction, idleKey);
+    });
   }
 
   playAction(
@@ -74,11 +85,11 @@ export class AnimationController {
     action: string,
     direction: Direction
   ): void {
-    const key = animationKeyForAction(actor, action, direction);
+    const idleKey = animationKeyForAction(actor, "idle", direction);
 
-    if (sprite.anims.animationManager.exists(key)) {
-      sprite.play(key, true);
-    }
+    this.enqueueOrRun(sprite, () => {
+      this.playActionNow(sprite, actor, action, direction, idleKey);
+    });
   }
 
   playJudgement(
@@ -106,25 +117,17 @@ export class AnimationController {
       return false;
     }
 
-    // Clear old animationcomplete listeners so a previously-interrupted sequence
-    // does not interfere with the new one (e.g. guard stand → salute in quick succession)
-    sprite.off("animationcomplete");
-
     const playNext = (index: number) => {
       const key = playable[index];
       if (!key) {
-        if (sprite.anims.animationManager.exists(idleKey)) {
-          sprite.play(idleKey, true);
-        }
+        this.finishAction(sprite, idleKey);
         return;
       }
 
       sprite.play(key, true);
       sprite.once("animationcomplete", () => {
         if (index >= playable.length - 1) {
-          if (sprite.anims.animationManager.exists(idleKey)) {
-            sprite.play(idleKey, true);
-          }
+          this.finishAction(sprite, idleKey);
           return;
         }
 
@@ -134,5 +137,76 @@ export class AnimationController {
 
     playNext(0);
     return true;
+  }
+
+  private playActionNow(
+    sprite: Phaser.GameObjects.Sprite,
+    actor: string,
+    action: string,
+    direction: Direction,
+    idleKey: string
+  ): void {
+    const key = animationKeyForAction(actor, action, direction);
+
+    if (!sprite.anims.animationManager.exists(key)) {
+      this.finishAction(sprite, idleKey);
+      return;
+    }
+
+    sprite.play(key, true);
+
+    if (!this.requiresFullPlayback(action)) {
+      this.finishAction(sprite, idleKey);
+      return;
+    }
+
+    sprite.once("animationcomplete", () => {
+      this.finishAction(sprite, idleKey);
+    });
+  }
+
+  private enqueueOrRun(sprite: Phaser.GameObjects.Sprite, runner: () => void): void {
+    const state = this.stateForSprite(sprite);
+    if (state.isBusy) {
+      state.queue.push(runner);
+      return;
+    }
+
+    state.isBusy = true;
+    runner();
+  }
+
+  private finishAction(sprite: Phaser.GameObjects.Sprite, idleKey: string): void {
+    const state = this.stateForSprite(sprite);
+    const next = state.queue.shift();
+
+    if (next) {
+      state.isBusy = true;
+      next();
+      return;
+    }
+
+    state.isBusy = false;
+    if (sprite.anims.animationManager.exists(idleKey)) {
+      sprite.play(idleKey, true);
+    }
+  }
+
+  private stateForSprite(sprite: Phaser.GameObjects.Sprite): SpriteAnimationState {
+    const existing = this.spriteStates.get(sprite);
+    if (existing) {
+      return existing;
+    }
+
+    const created: SpriteAnimationState = {
+      isBusy: false,
+      queue: []
+    };
+    this.spriteStates.set(sprite, created);
+    return created;
+  }
+
+  private requiresFullPlayback(action: string): boolean {
+    return !["idle", "watch", "run"].includes(action);
   }
 }

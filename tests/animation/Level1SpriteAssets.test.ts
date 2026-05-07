@@ -7,7 +7,8 @@ import {
   animationKeysForAsset,
   frameKeysForAssetPhase,
   frameKeysForAsset,
-  level1SpriteAssets
+  level1SpriteAssets,
+  playbackDurationMsForAsset
 } from "../../src/game/animation/Level1SpriteAssets";
 
 function readPngDimensions(dataUrl: string): { width: number; height: number } {
@@ -153,10 +154,12 @@ describe("Level1SpriteAssets", () => {
     const attention = level1SpriteAssets.find((asset) => asset.assetId === "guard_attention_left");
     const salute = level1SpriteAssets.find((asset) => asset.assetId === "guard_salute_left");
     const idle = level1SpriteAssets.find((asset) => asset.assetId === "guard_idle_left");
+    const praise = level1SpriteAssets.find((asset) => asset.assetId === "guard_praise_left");
 
     expect(actionLeadInMsForAsset(attention!)).toBe(125);
     expect(actionLeadInMsForAsset(salute!)).toBe(125);
     expect(actionLeadInMsForAsset(idle!)).toBe(0);
+    expect(playbackDurationMsForAsset(praise!)).toBe(1000);
   });
 
   it("keeps the praise art at the same runtime height without changing its aspect ratio", () => {

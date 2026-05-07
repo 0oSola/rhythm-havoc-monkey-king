@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  AnimationController,
   animationKeyForAction,
   animationKeyForActionPhase,
   animationKeyForJudgement
@@ -22,5 +23,71 @@ describe("AnimationController", () => {
     expect(animationKeyForActionPhase("wukong", "salute", "right", "recover")).toBe(
       "wukong_salute_right__recover"
     );
+  });
+
+  it("lets a queued action start only after the current segmented action fully completes", () => {
+    const controller = new AnimationController();
+    const handlers = new Map<string, () => void>();
+    const playCalls: string[] = [];
+    const existingKeys = new Set([
+      "wukong_idle_right",
+      "wukong_attention_right__start",
+      "wukong_attention_right__hit",
+      "wukong_attention_right__recover",
+      "wukong_salute_right__start",
+      "wukong_salute_right__hit",
+      "wukong_salute_right__recover"
+    ]);
+    const sprite = {
+      anims: {
+        animationManager: {
+          exists: vi.fn((key: string) => existingKeys.has(key))
+        }
+      },
+      play: vi.fn((key: string) => {
+        playCalls.push(key);
+      }),
+      once: vi.fn((event: string, handler: () => void) => {
+        handlers.set(event, handler);
+      }),
+      off: vi.fn((event: string) => {
+        handlers.delete(event);
+      })
+    };
+
+    controller.playReactiveAction(sprite as never, "wukong", "attention", "right");
+    controller.playReactiveAction(sprite as never, "wukong", "salute", "right");
+
+    expect(playCalls).toEqual(["wukong_attention_right__hit"]);
+
+    handlers.get("animationcomplete")?.();
+    expect(playCalls).toEqual([
+      "wukong_attention_right__hit",
+      "wukong_attention_right__recover"
+    ]);
+
+    handlers.get("animationcomplete")?.();
+    expect(playCalls).toEqual([
+      "wukong_attention_right__hit",
+      "wukong_attention_right__recover",
+      "wukong_salute_right__hit"
+    ]);
+
+    handlers.get("animationcomplete")?.();
+    expect(playCalls).toEqual([
+      "wukong_attention_right__hit",
+      "wukong_attention_right__recover",
+      "wukong_salute_right__hit",
+      "wukong_salute_right__recover"
+    ]);
+
+    handlers.get("animationcomplete")?.();
+    expect(playCalls).toEqual([
+      "wukong_attention_right__hit",
+      "wukong_attention_right__recover",
+      "wukong_salute_right__hit",
+      "wukong_salute_right__recover",
+      "wukong_idle_right"
+    ]);
   });
 });

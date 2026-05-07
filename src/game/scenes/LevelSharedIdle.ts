@@ -19,3 +19,14 @@ export function idleAnimationKeyForActor(actor: LevelActor): string {
 export function loopAnimationTimeScaleForKey(animationKey: string): number {
   return SHARED_IDLE_LOOP_KEYS.has(animationKey) ? SHARED_IDLE_ANIMATION_TIME_SCALE : 1;
 }
+
+export function canInterruptCurrentAnimationWithLoop(
+  currentAnimationKey: string | undefined,
+  isPlaying: boolean
+): boolean {
+  if (!isPlaying || !currentAnimationKey) {
+    return true;
+  }
+
+  return SHARED_IDLE_LOOP_KEYS.has(currentAnimationKey);
+}

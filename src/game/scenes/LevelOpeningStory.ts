@@ -44,6 +44,10 @@ export function openingShouldUseBeatMatchedIdleLoop(step: OpeningStepDefinition 
   return step?.kind === "guard-reveal" || step?.kind === "dialogue";
 }
 
+export function openingShouldForceIdleReset(step: OpeningStepDefinition | undefined): boolean {
+  return step?.kind === "dialogue";
+}
+
 export function openingContinuePromptForStep(step: OpeningStepDefinition | undefined): string | null {
   if (step?.kind === "story-caption" && step.requireConfirm) {
     return OPENING_CONTINUE_PROMPT;

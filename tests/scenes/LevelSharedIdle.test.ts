@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canInterruptCurrentAnimationWithLoop,
   loopAnimationTimeScaleForKey,
   IDLE_ANIMATION_KEY_BY_ACTOR,
   SHARED_IDLE_ANIMATION_TIME_SCALE,
@@ -22,5 +23,14 @@ describe("LevelSharedIdle", () => {
       SHARED_IDLE_ANIMATION_TIME_SCALE
     );
     expect(loopAnimationTimeScaleForKey("guard_salute_left")).toBe(1);
+  });
+
+  it("does not let scene-level loop requests interrupt one-shot action playback", () => {
+    expect(canInterruptCurrentAnimationWithLoop(undefined, false)).toBe(true);
+    expect(canInterruptCurrentAnimationWithLoop("guard_idle_left", true)).toBe(true);
+    expect(canInterruptCurrentAnimationWithLoop("guard_watch_left", true)).toBe(true);
+    expect(canInterruptCurrentAnimationWithLoop("guard_attention_left__hit", true)).toBe(false);
+    expect(canInterruptCurrentAnimationWithLoop("guard_salute_left", true)).toBe(false);
+    expect(canInterruptCurrentAnimationWithLoop("wukong_fail_right", true)).toBe(false);
   });
 });

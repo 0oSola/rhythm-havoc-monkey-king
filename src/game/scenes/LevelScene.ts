@@ -3,7 +3,8 @@ import { AB_CHORD_WINDOW_MS, GOOD_WINDOW_MS } from "../../shared/constants";
 import { AnimationController } from "../animation/AnimationController";
 import {
   actionLeadInMsForAsset,
-  findLevel1SpriteAsset
+  findLevel1SpriteAsset,
+  playbackDurationMsForAsset
 } from "../animation/Level1SpriteAssets";
 import { AudioClock } from "../audio/AudioClock";
 import { createSceneAudioClock } from "../audio/SceneAudioClock";
@@ -42,6 +43,7 @@ import {
 } from "./LevelInputFeedback";
 import { playerSfxKeyForFreeTrainingInput } from "./LevelFreeTrainingAudio";
 import {
+  canInterruptCurrentAnimationWithLoop,
   idleAnimationKeyForActor,
   loopAnimationTimeScaleForKey,
   SHARED_IDLE_ANIMATION_TIME_SCALE
@@ -54,7 +56,9 @@ import { pointerEventForState } from "./LevelSceneInputRouting";
 import {
   ACTOR_LAYOUT,
   BUBBLE_LAYOUT,
+  GUARD_PRAISE_IDLE_REPOSITION_DELAY_MS,
   GUARD_PRAISE_OFFSET_X,
+  GUARD_PRAISE_OFFSET_Y,
   OPENING_RUN_IN_DURATION_MS,
   openingRunInFlipXForActor,
   STAGE_SHADOWS,
@@ -74,9 +78,16 @@ import {
   type ExamCueWindow
 } from "./LevelCueRules";
 import {
+  consumeLevelDebugSequence,
+  debugAnimationPreviewForCommand,
+  debugAnimationPreviewIntervalMsForCommand,
+  levelFlowStateForDebugCommand
+} from "./LevelSceneDebugCommands";
+import {
   canConfirmOpeningStep,
   openingAdvanceSfxKeyForStep,
   openingDisplayTextForStep,
+  openingShouldForceIdleReset,
   type OpeningStoryAdvanceResult,
   openingRevealSfxKeyForStep,
   OPENING_CONTINUE_PROMPT_COLOR,
@@ -92,6 +103,7 @@ import {
   shouldPlayOpeningAdvanceSfx,
   shouldHideBackgroundForOpeningStep
 } from "./LevelOpeningStory";
+import { beginLevelResultTransition } from "./LevelSceneResultTransition";
 
 export class LevelScene extends Phaser.Scene {
   private readonly animationController = new AnimationController();
@@ -130,6 +142,7 @@ export class LevelScene extends Phaser.Scene {
   private openingTypingStepIndex?: number;
   private openingTypingVisibleChars = 0;
   private guardPraiseResetTimer?: Phaser.Time.TimerEvent;
+  private debugAnimationPreviewTimer?: Phaser.Time.TimerEvent;
 
   private practiceLoopIndex = 0;
   private practiceDemoIndex = 0;
@@ -353,6 +366,7 @@ export class LevelScene extends Phaser.Scene {
 
   private enterPhase(state: LevelFlowState): void {
     this.pendingRawInputs.length = 0;
+    this.clearDebugAnimationPreview();
     this.syncPhaseAudioForState(state);
     if (state.phaseType !== "practice" && state.phaseType !== "exam") {
       this.clock = undefined;
@@ -379,10 +393,13 @@ export class LevelScene extends Phaser.Scene {
       case "result":
         this.activeDialogue = undefined;
         this.dialogueBubble?.destroy();
-        this.scene.start(
-          "ResultScene",
-          createLevelResultPayload(this.level, createScoreSummary(this.examJudgements))
-        );
+        beginLevelResultTransition({
+          sound: this.sound,
+          add: this.add,
+          tweens: this.tweens,
+          scene: this.scene,
+          payload: createLevelResultPayload(this.level, createScoreSummary(this.examJudgements))
+        });
         break;
     }
   }
@@ -534,7 +551,11 @@ export class LevelScene extends Phaser.Scene {
         this.guard?.setAlpha(1);
         this.wukong?.setAlpha(1);
         this.wukong?.setPosition(ACTOR_LAYOUT.wukong.x, ACTOR_LAYOUT.wukong.y);
-        this.applyOpeningBeatMatchedIdleLoop();
+        if (openingShouldForceIdleReset(this.currentOpeningStep())) {
+          this.playSharedIdleLoops(true);
+        } else {
+          this.applyOpeningBeatMatchedIdleLoop();
+        }
         this.hud?.setFeedback("开场对白", "#ffd166");
         return;
       default:
@@ -584,14 +605,24 @@ export class LevelScene extends Phaser.Scene {
     this.playSharedIdleLoops();
   }
 
-  private playSharedIdleLoops(): void {
-    this.playActorIdleLoop("guard");
-    this.playActorIdleLoop("wukong");
+  private playSharedIdleLoops(force = false): void {
+    this.playActorIdleLoop("guard", force);
+    this.playActorIdleLoop("wukong", force);
   }
 
-  private playActorIdleLoop(actor: LevelActor): void {
+  private playActorIdleLoop(actor: LevelActor, force = false): void {
     const sprite = actor === "guard" ? this.guard : this.wukong;
     if (!sprite) {
+      return;
+    }
+
+    if (
+      !force &&
+      !canInterruptCurrentAnimationWithLoop(
+        sprite.anims.currentAnim?.key,
+        sprite.anims.isPlaying
+      )
+    ) {
       return;
     }
 
@@ -1181,6 +1212,16 @@ export class LevelScene extends Phaser.Scene {
     this.guardPraiseResetTimer?.remove(false);
     this.guardPraiseResetTimer = undefined;
     this.guardCueHoldUntilMs = sustainUntilMs;
+
+    if (
+      !canInterruptCurrentAnimationWithLoop(
+        this.guard.anims.currentAnim?.key,
+        this.guard.anims.isPlaying
+      )
+    ) {
+      return;
+    }
+
     this.guard.setFlipX(watchCueFlipXForActor("guard"));
     if (this.guard.anims.animationManager.exists("guard_watch_left")) {
       this.guard.anims.timeScale = loopAnimationTimeScaleForKey("guard_watch_left");
@@ -1211,17 +1252,24 @@ export class LevelScene extends Phaser.Scene {
     this.clearGuardCueHold(false);
     this.guardPraiseResetTimer?.remove(false);
     this.guardPraiseResetTimer = undefined;
+    const praiseAsset = findLevel1SpriteAsset("guard", "praise", "left");
+    const praisePlaybackDelayMs = praiseAsset ? playbackDurationMsForAsset(praiseAsset) : 420;
 
     if (this.guard) {
-      this.guard.setPosition(ACTOR_LAYOUT.guard.x + GUARD_PRAISE_OFFSET_X, ACTOR_LAYOUT.guard.y);
       this.guard.setFlipX(ACTOR_LAYOUT.guard.flipX);
       this.prepareActorForAction("guard");
-      this.guard.setPosition(ACTOR_LAYOUT.guard.x + GUARD_PRAISE_OFFSET_X, ACTOR_LAYOUT.guard.y);
+      this.guard.setPosition(
+        ACTOR_LAYOUT.guard.x + GUARD_PRAISE_OFFSET_X,
+        ACTOR_LAYOUT.guard.y + GUARD_PRAISE_OFFSET_Y
+      );
       this.animationController.playAction(this.guard, "guard", "praise", "left");
-      this.guardPraiseResetTimer = this.time.delayedCall(420, () => {
+      this.guardPraiseResetTimer = this.time.delayedCall(
+        praisePlaybackDelayMs + GUARD_PRAISE_IDLE_REPOSITION_DELAY_MS,
+        () => {
         this.guardPraiseResetTimer = undefined;
-        this.playActorIdleLoop("guard");
-      });
+          this.resetActorPosition("guard");
+        }
+      );
     }
 
     this.sound.play("PLAYER-correct.wav", { volume: 0.8 });
@@ -1834,19 +1882,122 @@ export class LevelScene extends Phaser.Scene {
       return;
     }
 
-    const key = event.key.toLowerCase();
-    if (!/^[a-z]$/.test(key)) {
-      this.devSequenceBuffer = "";
+    const { nextBuffer, command } = consumeLevelDebugSequence(
+      this.devSequenceBuffer,
+      event.key.toLowerCase()
+    );
+    this.devSequenceBuffer = nextBuffer;
+
+    if (!command) {
       return;
     }
 
-    this.devSequenceBuffer = `${this.devSequenceBuffer}${key}`.slice(-3);
-    if (this.devSequenceBuffer !== "dev") {
+    if (command === "toggle-debug-panel") {
+      this.setBubbleDebugCollapsed(false);
       return;
     }
 
-    this.devSequenceBuffer = "";
-    this.setBubbleDebugCollapsed(false);
+    this.applyDebugCommand(command);
+  }
+
+  private applyDebugCommand(
+    command: Exclude<ReturnType<typeof consumeLevelDebugSequence>["command"], undefined | "toggle-debug-panel">
+  ): void {
+    if (command === "stop-animation-preview") {
+      this.clearDebugAnimationPreview();
+      this.hud?.setFeedback("DEV: stop-animation-preview", "#9ad1ff");
+      return;
+    }
+
+    if (this.isAnimationPreviewCommand(command)) {
+      this.startDebugAnimationPreview(command);
+      this.hud?.setFeedback(`DEV: ${command}`, "#9ad1ff");
+      return;
+    }
+
+    this.clearOpeningAdvanceTimer();
+    this.clearOpeningTypingTimer();
+    this.practiceWarmupEndsAtMs = undefined;
+    this.pendingRawInputs.length = 0;
+    this.clearDebugAnimationPreview();
+    this.applyFlowState(levelFlowStateForDebugCommand(this.level, command));
+    this.hud?.setFeedback(`DEV: ${command}`, "#9ad1ff");
+  }
+
+  private startDebugAnimationPreview(
+    command: Extract<
+      Exclude<ReturnType<typeof consumeLevelDebugSequence>["command"], undefined>,
+      | "preview-guard-attention"
+      | "preview-guard-salute"
+      | "preview-guard-praise"
+      | "preview-wukong-attention"
+      | "preview-wukong-salute"
+    >
+  ): void {
+    const preview = debugAnimationPreviewForCommand(command);
+    this.clearDebugAnimationPreview();
+    this.playDebugAnimationPreview(preview);
+    this.debugAnimationPreviewTimer = this.time.addEvent({
+      delay: debugAnimationPreviewIntervalMsForCommand(command),
+      loop: true,
+      callback: () => {
+        this.playDebugAnimationPreview(preview);
+      }
+    });
+  }
+
+  private playDebugAnimationPreview(preview: ReturnType<typeof debugAnimationPreviewForCommand>): void {
+    const sprite = preview.actor === "guard" ? this.guard : this.wukong;
+    if (!sprite) {
+      return;
+    }
+
+    sprite.setFlipX(ACTOR_LAYOUT[preview.actor].flipX);
+    this.prepareActorForAction(preview.actor);
+
+    if (preview.action === "praise") {
+      if (preview.actor === "guard") {
+        sprite.setPosition(
+          ACTOR_LAYOUT.guard.x + GUARD_PRAISE_OFFSET_X,
+          ACTOR_LAYOUT.guard.y + GUARD_PRAISE_OFFSET_Y
+        );
+        const praiseAsset = findLevel1SpriteAsset("guard", "praise", "left");
+        const praisePlaybackDelayMs = praiseAsset ? playbackDurationMsForAsset(praiseAsset) : 420;
+        this.guardPraiseResetTimer?.remove(false);
+        this.guardPraiseResetTimer = this.time.delayedCall(
+          praisePlaybackDelayMs + GUARD_PRAISE_IDLE_REPOSITION_DELAY_MS,
+          () => {
+            this.guardPraiseResetTimer = undefined;
+            this.resetActorPosition("guard");
+          }
+        );
+      }
+      this.animationController.playAction(sprite, preview.actor, preview.action, preview.actor === "guard" ? "left" : "right");
+      return;
+    }
+
+    this.animationController.playReactiveAction(
+      sprite,
+      preview.actor,
+      preview.action,
+      preview.actor === "guard" ? "left" : "right"
+    );
+  }
+
+  private clearDebugAnimationPreview(): void {
+    this.debugAnimationPreviewTimer?.remove(false);
+    this.debugAnimationPreviewTimer = undefined;
+  }
+
+  private isAnimationPreviewCommand(
+    command: Exclude<ReturnType<typeof consumeLevelDebugSequence>["command"], undefined | "toggle-debug-panel" | "stop-animation-preview">
+  ): command is
+    | "preview-guard-attention"
+    | "preview-guard-salute"
+    | "preview-guard-praise"
+    | "preview-wukong-attention"
+    | "preview-wukong-salute" {
+    return command.startsWith("preview-");
   }
 
   private setBubbleDebugCollapsed(collapsed: boolean): void {
@@ -1898,10 +2049,6 @@ export class LevelScene extends Phaser.Scene {
     this.openingTypingVisibleChars = 0;
     this.devSequenceBuffer = "";
   }
-}
-
-function speakerLabel(actor: LevelActor): string {
-  return actor === "guard" ? "门卫" : "悟空";
 }
 
 function actionNameForActionId(actionId: LevelActionId): string {

@@ -19,7 +19,11 @@ export const STAGE_SHADOWS = {
 } as const;
 
 export const OPENING_RUN_IN_DURATION_MS = 2400;
-export const GUARD_PRAISE_OFFSET_X = 30;
+// Align praise to idle by the lower-body anchor rather than the full bbox,
+// so the guard does not appear to slide when returning to idle.
+export const GUARD_PRAISE_OFFSET_X = 23.5;
+export const GUARD_PRAISE_OFFSET_Y = 1.5;
+export const GUARD_PRAISE_IDLE_REPOSITION_DELAY_MS = 300;
 
 export const ACTOR_LAYOUT: Record<LevelActor, ActorLayout> = {
   guard: {
