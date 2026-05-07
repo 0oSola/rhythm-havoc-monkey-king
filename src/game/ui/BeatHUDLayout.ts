@@ -16,8 +16,8 @@ export const BEAT_HUD_LAYOUT = {
   },
   prompt: {
     x: 480,
-    y: 462,
-    fontSize: 18,
+    y: 64,
+    fontSize: 14,
     width: 360
   }
 } as const;

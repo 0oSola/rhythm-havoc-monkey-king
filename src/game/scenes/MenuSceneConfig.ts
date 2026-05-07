@@ -1,6 +1,7 @@
 export const MENU_CANVAS_WIDTH = 960;
 export const MENU_CANVAS_HEIGHT = 540;
 export const MENU_BACKGROUND_KEY = "menu-start-bg";
+export const MENU_FADE_TO_BLACK_DURATION_MS = 800;
 
 export const START_BUTTON_BOUNDS = {
   x: 278,

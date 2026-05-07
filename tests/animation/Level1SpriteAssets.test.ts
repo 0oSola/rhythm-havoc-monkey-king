@@ -154,8 +154,8 @@ describe("Level1SpriteAssets", () => {
     const salute = level1SpriteAssets.find((asset) => asset.assetId === "guard_salute_left");
     const idle = level1SpriteAssets.find((asset) => asset.assetId === "guard_idle_left");
 
-    expect(actionLeadInMsForAsset(attention!)).toBe(250);
-    expect(actionLeadInMsForAsset(salute!)).toBe(250);
+    expect(actionLeadInMsForAsset(attention!)).toBe(125);
+    expect(actionLeadInMsForAsset(salute!)).toBe(125);
     expect(actionLeadInMsForAsset(idle!)).toBe(0);
   });
 

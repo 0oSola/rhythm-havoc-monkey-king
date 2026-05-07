@@ -3,6 +3,7 @@ import {
   MENU_BACKGROUND_KEY,
   MENU_CANVAS_HEIGHT,
   MENU_CANVAS_WIDTH,
+  MENU_FADE_TO_BLACK_DURATION_MS,
   START_BUTTON_BOUNDS,
   isPointInsideStartButton
 } from "../../src/game/scenes/MenuSceneConfig";
@@ -29,5 +30,10 @@ describe("MenuSceneConfig", () => {
     expect(isPointInsideStartButton(220, 282)).toBe(false);
     expect(isPointInsideStartButton(480, 160)).toBe(false);
     expect(isPointInsideStartButton(760, 282)).toBe(false);
+  });
+
+  it("defines a menu fade-to-black duration between 400ms and 2000ms", () => {
+    expect(MENU_FADE_TO_BLACK_DURATION_MS).toBeGreaterThanOrEqual(400);
+    expect(MENU_FADE_TO_BLACK_DURATION_MS).toBeLessThanOrEqual(2000);
   });
 });

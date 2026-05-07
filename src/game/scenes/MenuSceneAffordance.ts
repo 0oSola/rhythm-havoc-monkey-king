@@ -1,7 +1,7 @@
 import type Phaser from "phaser";
 import { START_BUTTON_BOUNDS } from "./MenuSceneConfig";
 
-export const MENU_START_PROMPT_TEXT = "按 A 开始游戏";
+export const MENU_START_PROMPT_TEXT = "按 A 或点击开始游戏";
 
 type MenuAffordanceScene = Pick<Phaser.Scene, "add" | "tweens">;
 

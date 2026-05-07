@@ -106,6 +106,10 @@ export class AnimationController {
       return false;
     }
 
+    // Clear old animationcomplete listeners so a previously-interrupted sequence
+    // does not interfere with the new one (e.g. guard stand → salute in quick succession)
+    sprite.off("animationcomplete");
+
     const playNext = (index: number) => {
       const key = playable[index];
       if (!key) {

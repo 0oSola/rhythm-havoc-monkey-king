@@ -22,7 +22,7 @@ export class BeatHUD {
       .text(BEAT_HUD_LAYOUT.prompt.x, BEAT_HUD_LAYOUT.prompt.y, "A 立正 / A+S 敬礼", {
         color: "#2f241c",
         fontSize: `${BEAT_HUD_LAYOUT.prompt.fontSize}px`,
-        backgroundColor: "rgba(255, 247, 232, 0.94)",
+        //backgroundColor: "rgba(255, 247, 232, 0.94)",
         padding: { left: 18, right: 18, top: 10, bottom: 10 },
         align: "center",
         wordWrap: {

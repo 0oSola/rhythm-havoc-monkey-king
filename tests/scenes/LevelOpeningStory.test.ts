@@ -75,7 +75,7 @@ describe("LevelOpeningStory", () => {
         text: "先溜进去再说！",
         requireConfirm: true
       })
-    ).toBe("按 A 继续");
+    ).toBe("按 A 或点击继续");
     expect(
       openingShouldAcceptAdvanceKey({
         kind: "story-caption",

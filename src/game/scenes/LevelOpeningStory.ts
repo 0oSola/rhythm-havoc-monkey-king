@@ -1,7 +1,7 @@
 import type { OpeningStepDefinition } from "../level/LevelTypes";
 import { NORMAL_CONFIRM_SFX_KEY } from "./LevelCueRules";
 
-export const OPENING_CONTINUE_PROMPT = "按 A 继续";
+export const OPENING_CONTINUE_PROMPT = "按 A 或点击继续";
 export const OPENING_CONTINUE_PROMPT_FONT_SIZE_PX = 14;
 export const OPENING_CONTINUE_PROMPT_COLOR = "#8e8e8e";
 export const OPENING_BEAT_MATCHED_IDLE_FRAME_RATE = 5 / 3;

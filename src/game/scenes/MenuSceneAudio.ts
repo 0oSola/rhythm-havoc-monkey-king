@@ -11,6 +11,13 @@ type MenuSoundManager = Pick<Phaser.Sound.BaseSoundManager, "add" | "get" | "loc
 type MenuSound = Pick<Phaser.Sound.BaseSound, "isPlaying" | "play" | "stop">;
 type MenuPlayableSoundManager = Pick<Phaser.Sound.BaseSoundManager, "play">;
 
+function resumeAudioContext(sound: MenuSoundManager): void {
+  const context = (sound as unknown as { context?: AudioContext }).context;
+  if (context && context.state === "suspended") {
+    void context.resume();
+  }
+}
+
 export function attachMenuOpeningBgm(sound: MenuSoundManager): () => void {
   const menuBgm = getOrCreateMenuOpeningBgm(sound);
 
@@ -20,14 +27,30 @@ export function attachMenuOpeningBgm(sound: MenuSoundManager): () => void {
     }
   };
 
-  if (sound.locked) {
-    sound.once("unlocked", tryPlay);
-  } else {
+  // Always try to play immediately
+  tryPlay();
+
+  // Also listen for Phaser's unlock event as fallback
+  sound.once("unlocked", tryPlay);
+
+  // Resume AudioContext on any document-level interaction (browser only)
+  const onDocumentInteraction = (): void => {
+    resumeAudioContext(sound);
     tryPlay();
+  };
+
+  const hasDocument = typeof document !== "undefined";
+  if (hasDocument) {
+    document.addEventListener("pointerdown", onDocumentInteraction, { once: true });
+    document.addEventListener("keydown", onDocumentInteraction, { once: true });
   }
 
   return () => {
     sound.off("unlocked", tryPlay);
+    if (hasDocument) {
+      document.removeEventListener("pointerdown", onDocumentInteraction);
+      document.removeEventListener("keydown", onDocumentInteraction);
+    }
     menuBgm.stop();
   };
 }

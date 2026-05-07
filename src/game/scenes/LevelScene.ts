@@ -104,6 +104,7 @@ export class LevelScene extends Phaser.Scene {
   private guardShadow?: Phaser.GameObjects.Ellipse;
   private wukongShadow?: Phaser.GameObjects.Ellipse;
   private openingMask?: Phaser.GameObjects.Rectangle;
+  private entryFadeOverlay?: Phaser.GameObjects.Rectangle;
   private openingTitleText?: Phaser.GameObjects.Text;
   private openingCaptionText?: Phaser.GameObjects.Text;
   private openingStoryText?: Phaser.GameObjects.Text;
@@ -149,12 +150,14 @@ export class LevelScene extends Phaser.Scene {
   private examPraiseCueIndex = 0;
   private readonly examBarJudgements = new Map<number, JudgementResult[]>();
   private guardCueHoldUntilMs?: number;
+  private examAudioComplete = false;
 
   constructor() {
     super("LevelScene");
   }
 
   create(): void {
+    this.resetState();
     this.loadBubbleStyle();
     this.createStage();
     this.createBubbleDebugPanel();
@@ -171,10 +174,12 @@ export class LevelScene extends Phaser.Scene {
       const pointerEvent = pointerEventForState(this.level, this.flowState);
 
       if (!pointerEvent) {
+        this.handleKeyPress("A");
         return;
       }
 
       if (pointerEvent.type === "confirm") {
+        this.playDialogueConfirmSfx();
         this.handleConfirm();
         return;
       }
@@ -185,7 +190,24 @@ export class LevelScene extends Phaser.Scene {
       });
     });
 
-    this.enterPhase(this.flowState);
+    this.entryFadeOverlay = this.add
+      .rectangle(480, 270, 960, 540, 0x000000, 1)
+      .setDepth(50);
+
+    this.time.delayedCall(200, () => {
+      this.enterPhase(this.flowState);
+      this.tweens.add({
+        targets: this.entryFadeOverlay,
+        alpha: 0,
+        duration: 600,
+        ease: "Sine.easeInOut",
+        onComplete: () => {
+          this.entryFadeOverlay?.destroy();
+          this.entryFadeOverlay = undefined;
+        }
+      });
+    });
+
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.destroyBubbleDebugPanel();
     });
@@ -456,7 +478,7 @@ export class LevelScene extends Phaser.Scene {
       case "wukong-run-in":
         this.hud?.setFeedbackVisible(true);
         this.hud?.setPromptVisible(false);
-        this.openingCaptionText.setText("悟空鬼鬼祟祟靠近南天门").setVisible(true);
+        //this.openingCaptionText.setText("悟空鬼鬼祟祟靠近南天门").setVisible(true);
         this.guard?.setAlpha(0);
         this.wukong?.setAlpha(1);
         this.wukong?.setPosition(796, ACTOR_LAYOUT.wukong.y);
@@ -477,12 +499,12 @@ export class LevelScene extends Phaser.Scene {
             }
           });
         }
-        this.hud?.setFeedback("悟空鬼祟入场", "#ffd166");
+        this.hud?.setFeedback("开场对白", "#ffd166");
         return;
       case "guard-reveal":
         this.hud?.setFeedbackVisible(true);
         this.hud?.setPromptVisible(false);
-        this.openingCaptionText.setText("门卫突然现身").setVisible(true);
+        //this.openingCaptionText.setText("门卫突然现身").setVisible(true);
         const openingRevealSfxKey = openingRevealSfxKeyForStep(this.currentOpeningStep());
         if (openingRevealSfxKey) {
           this.sound.play(openingRevealSfxKey, { volume: 0.75 });
@@ -504,7 +526,7 @@ export class LevelScene extends Phaser.Scene {
             }
           });
         }
-        this.hud?.setFeedback("门卫现身拦截", "#ffd166");
+        this.hud?.setFeedback("开场对白", "#ffd166");
         return;
       case "dialogue":
         this.hud?.setFeedbackVisible(true);
@@ -773,6 +795,10 @@ export class LevelScene extends Phaser.Scene {
     this.examPraiseCueIndex = 0;
     this.examBarJudgements.clear();
     this.clearGuardCueHold(true);
+    this.examAudioComplete = false;
+    this.phaseSound?.once("complete", () => {
+      this.examAudioComplete = true;
+    });
     this.clock = createSceneAudioClock(this.sound);
     await this.clock.start();
     this.showDialogueBubble("guard", "正式考核开始。先听，再跟。");
@@ -1016,7 +1042,7 @@ export class LevelScene extends Phaser.Scene {
 
     if (this.examPlayerIndex >= this.examPlayerEvents.length && this.examPlayerEvents.length > 0) {
       const lastTargetTimeMs = this.examPlayerEvents[this.examPlayerEvents.length - 1].timeMs;
-      if (elapsedMs > lastTargetTimeMs + GOOD_WINDOW_MS) {
+      if (elapsedMs > lastTargetTimeMs + GOOD_WINDOW_MS && this.examAudioComplete) {
         this.applyFlowState({
           phaseType: "result",
           currentPhaseId: "result"
@@ -1423,15 +1449,15 @@ export class LevelScene extends Phaser.Scene {
       .setOrigin(0, 0);
     const textBounds = bubbleText.getBounds();
 
-    const nameText = this.add
-      .text(0, -70, speakerLabel(actor), {
-        color: "#fff7e8",
-        fontSize: "16px",
-        fontStyle: "bold",
-        backgroundColor: "#5a3d2b",
-        padding: { left: 10, right: 10, top: 4, bottom: 4 }
-      })
-      .setOrigin(0.5);
+    // const nameText = this.add
+    //   .text(0, -70, speakerLabel(actor), {
+    //     color: "#fff7e8",
+    //     fontSize: "16px",
+    //     fontStyle: "bold",
+    //     backgroundColor: "#5a3d2b",
+    //     padding: { left: 10, right: 10, top: 4, bottom: 4 }
+    //   })
+    //   .setOrigin(0.5);
 
     const measuredTextHeight = this.measureBubbleHeight(wrappedText, bubbleStyle);
     const bubbleWidth = Math.max(
@@ -1488,8 +1514,7 @@ export class LevelScene extends Phaser.Scene {
 
     this.dialogueBubble = this.add.container(bubbleX, bubbleY, [
       bubbleShape,
-      bubbleText,
-      nameText
+      bubbleText
     ]);
   }
 
@@ -1839,6 +1864,39 @@ export class LevelScene extends Phaser.Scene {
       this.bubbleDebugHint.style.display =
         collapsed || this.bubbleDebugPanel?.style.display === "grid" ? "none" : "block";
     }
+  }
+
+  private resetState(): void {
+    this.flowState = createLevelFlowState(this.level);
+    this.pendingRawInputs.length = 0;
+    this.clock = undefined;
+    this.phaseSound?.stop();
+    this.phaseSound = undefined;
+    this.phaseSoundKey = undefined;
+    this.phaseSoundLoop = undefined;
+    this.practiceLoopIndex = 0;
+    this.practiceDemoIndex = 0;
+    this.practicePlayerIndex = 0;
+    this.practiceLoopJudgements = [];
+    this.practiceWarmupEndsAtMs = undefined;
+    this.practiceHandoffCueLoop = -1;
+    this.practicePraiseCueLoop = -1;
+    this.examNpcEvents = [];
+    this.examPlayerEvents = [];
+    this.examNpcIndex = 0;
+    this.examPlayerIndex = 0;
+    this.examJudgements = [];
+    this.examCombo = 0;
+    this.examBarJudgements.clear();
+    this.examAudioComplete = false;
+    this.examHandoffCueIndex = 0;
+    this.examPraiseCueIndex = 0;
+    this.examCueWindows = [];
+    this.guardCueHoldUntilMs = undefined;
+    this.activeDialogue = undefined;
+    this.openingTypingStepIndex = undefined;
+    this.openingTypingVisibleChars = 0;
+    this.devSequenceBuffer = "";
   }
 }
 
