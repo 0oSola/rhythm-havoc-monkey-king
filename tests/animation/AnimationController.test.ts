@@ -90,4 +90,33 @@ describe("AnimationController", () => {
       "wukong_idle_right"
     ]);
   });
+
+  it("does not let guard praise block the next rhythm action", () => {
+    const controller = new AnimationController();
+    const playCalls: string[] = [];
+    const existingKeys = new Set([
+      "guard_idle_left",
+      "guard_praise_left",
+      "guard_attention_left__start",
+      "guard_attention_left__hit",
+      "guard_attention_left__recover"
+    ]);
+    const sprite = {
+      anims: {
+        animationManager: {
+          exists: vi.fn((key: string) => existingKeys.has(key))
+        }
+      },
+      play: vi.fn((key: string) => {
+        playCalls.push(key);
+      }),
+      once: vi.fn(),
+      off: vi.fn()
+    };
+
+    controller.playAction(sprite as never, "guard", "praise", "left");
+    controller.playTelegraphedAction(sprite as never, "guard", "attention", "left");
+
+    expect(playCalls).toEqual(["guard_praise_left", "guard_attention_left__start"]);
+  });
 });

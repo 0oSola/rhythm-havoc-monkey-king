@@ -87,6 +87,11 @@ export class AnimationController {
   ): void {
     const idleKey = animationKeyForAction(actor, "idle", direction);
 
+    if (action === "praise") {
+      this.playNonBlockingAction(sprite, actor, action, direction);
+      return;
+    }
+
     this.enqueueOrRun(sprite, () => {
       this.playActionNow(sprite, actor, action, direction, idleKey);
     });
@@ -163,6 +168,18 @@ export class AnimationController {
     sprite.once("animationcomplete", () => {
       this.finishAction(sprite, idleKey);
     });
+  }
+
+  private playNonBlockingAction(
+    sprite: Phaser.GameObjects.Sprite,
+    actor: string,
+    action: string,
+    direction: Direction
+  ): void {
+    const key = animationKeyForAction(actor, action, direction);
+    if (sprite.anims.animationManager.exists(key)) {
+      sprite.play(key, true);
+    }
   }
 
   private enqueueOrRun(sprite: Phaser.GameObjects.Sprite, runner: () => void): void {
