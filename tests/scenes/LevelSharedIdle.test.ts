@@ -33,4 +33,8 @@ describe("LevelSharedIdle", () => {
     expect(canInterruptCurrentAnimationWithLoop("guard_salute_left", true)).toBe(false);
     expect(canInterruptCurrentAnimationWithLoop("wukong_fail_right", true)).toBe(false);
   });
+
+  it("lets scene-level idle loops clear guard praise feedback on phase transitions", () => {
+    expect(canInterruptCurrentAnimationWithLoop("guard_praise_left", true)).toBe(true);
+  });
 });

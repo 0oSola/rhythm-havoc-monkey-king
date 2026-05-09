@@ -11,11 +11,13 @@ type MenuSoundManager = Pick<Phaser.Sound.BaseSoundManager, "add" | "get" | "loc
 type MenuSound = Pick<Phaser.Sound.BaseSound, "isPlaying" | "play" | "stop">;
 type MenuPlayableSoundManager = Pick<Phaser.Sound.BaseSoundManager, "play">;
 
-function resumeAudioContext(sound: MenuSoundManager): void {
+function resumeAudioContext(sound: MenuSoundManager): Promise<void> | null {
   const context = (sound as unknown as { context?: AudioContext }).context;
   if (context && context.state === "suspended") {
-    void context.resume();
+    return context.resume();
   }
+
+  return null;
 }
 
 export function attachMenuOpeningBgm(sound: MenuSoundManager): () => void {
@@ -29,14 +31,16 @@ export function attachMenuOpeningBgm(sound: MenuSoundManager): () => void {
 
   // Always try to play immediately
   tryPlay();
+  void resumeAudioContext(sound)?.then(tryPlay).catch(() => undefined);
 
   // Also listen for Phaser's unlock event as fallback
   sound.once("unlocked", tryPlay);
 
   // Resume AudioContext on any document-level interaction (browser only)
   const onDocumentInteraction = (): void => {
-    resumeAudioContext(sound);
+    const resumePromise = resumeAudioContext(sound);
     tryPlay();
+    void resumePromise?.then(tryPlay).catch(() => undefined);
   };
 
   const hasDocument = typeof document !== "undefined";

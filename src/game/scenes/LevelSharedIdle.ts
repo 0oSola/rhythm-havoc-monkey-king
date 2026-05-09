@@ -11,6 +11,7 @@ export const SHARED_IDLE_BASE_FRAME_RATE = 6;
 export const SHARED_IDLE_ANIMATION_TIME_SCALE =
   SHARED_IDLE_FRAME_RATE / SHARED_IDLE_BASE_FRAME_RATE;
 export const SHARED_IDLE_LOOP_KEYS = new Set(["guard_idle_left", "wukong_idle_right", "guard_watch_left"]);
+const IDLE_INTERRUPTIBLE_FEEDBACK_KEYS = new Set(["guard_praise_left"]);
 
 export function idleAnimationKeyForActor(actor: LevelActor): string {
   return IDLE_ANIMATION_KEY_BY_ACTOR[actor];
@@ -28,5 +29,8 @@ export function canInterruptCurrentAnimationWithLoop(
     return true;
   }
 
-  return SHARED_IDLE_LOOP_KEYS.has(currentAnimationKey);
+  return (
+    SHARED_IDLE_LOOP_KEYS.has(currentAnimationKey) ||
+    IDLE_INTERRUPTIBLE_FEEDBACK_KEYS.has(currentAnimationKey)
+  );
 }

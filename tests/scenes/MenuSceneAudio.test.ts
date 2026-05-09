@@ -17,6 +17,10 @@ type MockSoundManager = {
   get: ReturnType<typeof vi.fn>;
   once: ReturnType<typeof vi.fn>;
   off: ReturnType<typeof vi.fn>;
+  context?: {
+    state: AudioContextState;
+    resume: ReturnType<typeof vi.fn>;
+  };
 };
 
 function createSoundHarness(locked = false): {
@@ -56,6 +60,29 @@ describe("MenuSceneAudio", () => {
       volume: 0.65
     });
     expect(soundInstance.play).toHaveBeenCalledWith();
+  });
+
+  it("retries the menu opening bgm after resuming a suspended audio context", async () => {
+    const { sound, soundInstance } = createSoundHarness(false);
+    soundInstance.play.mockImplementation(() => {
+      if (soundInstance.play.mock.calls.length > 1) {
+        soundInstance.isPlaying = true;
+      }
+      return true;
+    });
+    const context = {
+      state: "suspended" as AudioContextState,
+      resume: vi.fn(async () => {
+        context.state = "running" as AudioContextState;
+      })
+    };
+    sound.context = context;
+
+    attachMenuOpeningBgm(sound);
+    await Promise.resolve();
+
+    expect(context.resume).toHaveBeenCalledTimes(1);
+    expect(soundInstance.play).toHaveBeenCalledTimes(2);
   });
 
   it("stops the menu opening bgm when leaving the menu", () => {
