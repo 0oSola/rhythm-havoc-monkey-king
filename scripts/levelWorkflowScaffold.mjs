@@ -228,7 +228,7 @@ function buildQaContent({ levelId, levelName }) {
 `;
 }
 
-function buildLevelJsonContent({ levelId, levelName, audioKey }) {
+function buildLevelJsonContent({ levelId, levelName }) {
   return `{
   "levelId": "${levelId}",
   "name": "${levelName}",

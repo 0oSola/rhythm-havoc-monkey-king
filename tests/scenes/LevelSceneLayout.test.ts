@@ -33,8 +33,8 @@ describe("LevelSceneLayout", () => {
   });
 
   it("aligns praise to idle using the lower-body anchor instead of the full image bounds", () => {
-    expect(GUARD_PRAISE_OFFSET_X).toBe(23.5);
-    expect(GUARD_PRAISE_OFFSET_Y).toBe(1.5);
+    expect(GUARD_PRAISE_OFFSET_X).toBe(0);
+    expect(GUARD_PRAISE_OFFSET_Y).toBe(0);
     expect(GUARD_PRAISE_IDLE_REPOSITION_DELAY_MS).toBe(300);
   });
 

@@ -66,6 +66,9 @@ import {
 } from "./LevelSceneLayout";
 import {
   bubbleActorForState,
+  freeHudPromptForPhase,
+  practiceBubblePromptForPhase,
+  practiceHudPromptForPhase,
   phaseAudioKeyForState,
   phaseBackgroundKeyForState
 } from "./LevelScenePresentation";
@@ -518,7 +521,7 @@ export class LevelScene extends Phaser.Scene {
         }
         this.hud?.setFeedback("开场对白", "#ffd166");
         return;
-      case "guard-reveal":
+      case "guard-reveal": {
         this.hud?.setFeedbackVisible(true);
         this.hud?.setPromptVisible(false);
         //this.openingCaptionText.setText("门卫突然现身").setVisible(true);
@@ -545,6 +548,7 @@ export class LevelScene extends Phaser.Scene {
         }
         this.hud?.setFeedback("开场对白", "#ffd166");
         return;
+      }
       case "dialogue":
         this.hud?.setFeedbackVisible(true);
         this.hud?.setPromptVisible(true);
@@ -790,7 +794,7 @@ export class LevelScene extends Phaser.Scene {
     if (state.stage === "warmup") {
       this.clock = undefined;
       this.practiceWarmupEndsAtMs = this.time.now + phase.warmupDurationMs;
-      this.showDialogueBubble("guard", this.practicePromptForPhase(phase, state.passCount));
+      this.showDialogueBubble("guard", this.practiceBubblePromptForPhase(phase, state.passCount));
       this.hud?.setPrompt(this.practicePromptForPhase(phase, state.passCount));
       this.hud?.setFeedback("预热提示，下一小节开始跟拍", "#ffd166");
       return;
@@ -805,13 +809,14 @@ export class LevelScene extends Phaser.Scene {
     this.practicePraiseCueLoop = -1;
     this.clock = createSceneAudioClock(this.sound);
     await this.clock.start();
-    this.showDialogueBubble("guard", this.practicePromptForPhase(phase, state.passCount));
+    this.showDialogueBubble("guard", this.practiceBubblePromptForPhase(phase, state.passCount));
     this.hud?.setPrompt(this.practicePromptForPhase(phase, state.passCount));
     this.hud?.setFeedback("听示范，下一小节轮到你", "#ffd166");
     this.playSharedIdleLoops();
   }
 
   private async enterExamPhase(_state: Extract<LevelFlowState, { phaseType: "exam" }>): Promise<void> {
+    void _state;
     const timeline = createExamTimeline(this.level);
     const examPhase = this.phaseById("exam") as ExamPhaseDefinition;
     this.configureOpeningOverlay(null);
@@ -1444,12 +1449,15 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private freePromptForPhase(phase: FreeTrainingPhaseDefinition): string {
-    return `${phase.prompt} (${inputLabelForType(this.level.actions[phase.actionId].inputType)})`;
+    return freeHudPromptForPhase(this.level, phase);
   }
 
   private practicePromptForPhase(phase: PracticePhaseDefinition, passCount: number): string {
-    const remaining = phase.requiredPassCount - passCount;
-    return phase.promptTemplate.replace("{n}", String(remaining));
+    return practiceHudPromptForPhase(phase, passCount);
+  }
+
+  private practiceBubblePromptForPhase(phase: PracticePhaseDefinition, passCount: number): string {
+    return practiceBubblePromptForPhase(phase, passCount);
   }
 
   private syncBackgroundForState(state: LevelFlowState): void {
@@ -2059,15 +2067,6 @@ function actionNameForActionId(actionId: LevelActionId): string {
       return "salute";
     default:
       return actionId.toLowerCase();
-  }
-}
-
-function inputLabelForType(inputType: InputType): string {
-  switch (inputType) {
-    case "AB":
-      return "A+S";
-    default:
-      return inputType;
   }
 }
 

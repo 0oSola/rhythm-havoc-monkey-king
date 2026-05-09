@@ -4,6 +4,9 @@ import { createLevelFlowState } from "../../src/game/level/LevelFlow";
 import { parseLevelDefinition } from "../../src/game/level/LevelLoader";
 import {
   bubbleActorForState,
+  freeHudPromptForPhase,
+  practiceBubblePromptForPhase,
+  practiceHudPromptForPhase,
   phaseAudioKeyForState,
   phaseBackgroundKeyForState
 } from "../../src/game/scenes/LevelScenePresentation";
@@ -96,5 +99,51 @@ describe("LevelScenePresentation", () => {
         currentPhaseId: "exam"
       })
     ).toBe("level1_exam_bgm_0503");
+  });
+
+  it("keeps bubble copy separate from HUD tutorial prompts", () => {
+    const level = parseLevelDefinition(gateLevelData);
+    const attentionFree = level.phases.find((entry) => entry.id === "attention_free");
+    const attentionPractice = level.phases.find((entry) => entry.id === "attention_rhythm");
+    const saluteFree = level.phases.find((entry) => entry.id === "salute_free");
+    const salutePractice = level.phases.find((entry) => entry.id === "salute_rhythm");
+
+    expect(attentionFree && attentionFree.type === "free" ? attentionFree.prompt : null).toBe(
+      "你先学会立正，按A"
+    );
+    expect(attentionFree && attentionFree.type === "free" ? freeHudPromptForPhase(level, attentionFree) : null).toBe(
+      "按A"
+    );
+
+    expect(attentionPractice && attentionPractice.type === "practice" ? attentionPractice.promptTemplate : null).toBe(
+      "跟着我的节奏来，还有{n}次。"
+    );
+    expect(
+      attentionPractice && attentionPractice.type === "practice"
+        ? practiceBubblePromptForPhase(attentionPractice, 1)
+        : null
+    ).toBe("跟着我的节奏来，还有2次。");
+    expect(
+      attentionPractice && attentionPractice.type === "practice"
+        ? practiceHudPromptForPhase(attentionPractice, 1)
+        : null
+    ).toBe("跟随门卫节奏按A");
+
+    expect(saluteFree && saluteFree.type === "free" ? saluteFree.prompt : null).toBe(
+      "不错，还算有天赋，接下来跟我学敬礼，同时按A和S。"
+    );
+    expect(saluteFree && saluteFree.type === "free" ? freeHudPromptForPhase(level, saluteFree) : null).toBe(
+      "同时按A和S"
+    );
+
+    expect(salutePractice && salutePractice.type === "practice" ? salutePractice.promptTemplate : null).toBe(
+      "注意我的节奏，还有{n}次。"
+    );
+    expect(
+      salutePractice && salutePractice.type === "practice" ? practiceBubblePromptForPhase(salutePractice, 1) : null
+    ).toBe("注意我的节奏，还有2次。");
+    expect(
+      salutePractice && salutePractice.type === "practice" ? practiceHudPromptForPhase(salutePractice, 1) : null
+    ).toBe("跟随门卫节奏同时按A和S");
   });
 });

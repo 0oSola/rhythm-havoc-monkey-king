@@ -70,6 +70,7 @@
       "type": "free",
       "backgroundKey": "level1-stage-bg",
       "prompt": "你先学会立正，按A",
+      "hudPrompt": "按A",
       "actionId": "ATTENTION",
       "requiredCount": 4,
       "milestones": [
@@ -82,6 +83,7 @@
       "type": "practice",
       "backgroundKey": "level1-stage-bg",
       "promptTemplate": "跟着我的节奏来，还有{n}次。",
+      "hudPromptTemplate": "跟随门卫节奏按A",
       "warmupAudioKey": "level1_practice_ready_bgm",
       "warmupDurationMs": 2400,
       "audioKey": "level1_attention_practice_bgm",
@@ -108,6 +110,7 @@
       "type": "free",
       "backgroundKey": "level1-stage-bg",
       "prompt": "不错，还算有天赋，接下来跟我学敬礼，同时按A和S。",
+      "hudPrompt": "同时按A和S",
       "actionId": "SALUTE",
       "requiredCount": 3,
       "milestones": [
@@ -120,6 +123,7 @@
       "type": "practice",
       "backgroundKey": "level1-stage-bg",
       "promptTemplate": "注意我的节奏，还有{n}次。",
+      "hudPromptTemplate": "跟随门卫节奏同时按A和S",
       "warmupAudioKey": "level1_practice_ready_bgm",
       "warmupDurationMs": 2400,
       "audioKey": "level1_salute_practice_bgm",

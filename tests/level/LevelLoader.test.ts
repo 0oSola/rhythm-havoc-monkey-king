@@ -64,12 +64,14 @@ describe("LevelLoader", () => {
 
     expect(attentionFree).toMatchObject({
       type: "free",
-      prompt: "你先学会立正，按A"
+      prompt: "你先学会立正，按A",
+      hudPrompt: "按A"
     });
 
     expect(attentionPractice).toMatchObject({
       type: "practice",
       promptTemplate: "跟着我的节奏来，还有{n}次。",
+      hudPromptTemplate: "跟随门卫节奏按A",
       requiredPassCount: 3,
       passThreshold: "GOOD",
       warmupAudioKey: "level1_practice_ready_bgm",
@@ -78,12 +80,14 @@ describe("LevelLoader", () => {
 
     expect(saluteFree).toMatchObject({
       type: "free",
-      prompt: "不错，还算有天赋，接下来跟我学敬礼，同时按A和S。"
+      prompt: "不错，还算有天赋，接下来跟我学敬礼，同时按A和S。",
+      hudPrompt: "同时按A和S"
     });
 
     expect(salutePractice).toMatchObject({
       type: "practice",
       promptTemplate: "注意我的节奏，还有{n}次。",
+      hudPromptTemplate: "跟随门卫节奏同时按A和S",
       requiredPassCount: 3,
       passThreshold: "GOOD",
       warmupAudioKey: "level1_practice_ready_bgm",

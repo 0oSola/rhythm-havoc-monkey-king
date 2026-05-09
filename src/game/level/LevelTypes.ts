@@ -59,6 +59,7 @@ export interface FreeTrainingPhaseDefinition {
   type: "free";
   backgroundKey: string;
   prompt: string;
+  hudPrompt?: string;
   actionId: LevelActionId;
   requiredCount: number;
   milestones: readonly FreeTrainingMilestone[];
@@ -77,6 +78,7 @@ export interface PracticePhaseDefinition {
   type: "practice";
   backgroundKey: string;
   promptTemplate: string;
+  hudPromptTemplate?: string;
   warmupAudioKey: string;
   warmupDurationMs: number;
   audioKey: string;

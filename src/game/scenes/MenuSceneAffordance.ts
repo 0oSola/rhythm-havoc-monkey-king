@@ -7,8 +7,9 @@ type MenuAffordanceScene = Pick<Phaser.Scene, "add" | "tweens">;
 
 export function attachMenuStartAffordance(
   scene: MenuAffordanceScene,
-  _backgroundKey: string
+  backgroundKey: string
 ): void {
+  void backgroundKey;
   const centerX = START_BUTTON_BOUNDS.x + START_BUTTON_BOUNDS.width / 2;
 
   scene.add

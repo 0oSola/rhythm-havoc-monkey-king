@@ -1,5 +1,11 @@
 import type { LevelFlowState } from "../level/LevelFlow";
-import type { LevelActor, LevelDefinition } from "../level/LevelTypes";
+import type {
+  FreeTrainingPhaseDefinition,
+  LevelActor,
+  LevelDefinition,
+  PracticePhaseDefinition
+} from "../level/LevelTypes";
+import type { InputType } from "../rhythm/RhythmTypes";
 
 export function phaseBackgroundKeyForState(level: LevelDefinition, state: LevelFlowState): string {
   const phase = level.phases.find((entry) => entry.id === state.currentPhaseId);
@@ -44,4 +50,36 @@ export function phaseAudioKeyForState(level: LevelDefinition, state: LevelFlowSt
   }
 
   return null;
+}
+
+export function freeHudPromptForPhase(
+  level: LevelDefinition,
+  phase: FreeTrainingPhaseDefinition
+): string {
+  return phase.hudPrompt ?? `${phase.prompt} (${inputLabelForType(level.actions[phase.actionId].inputType)})`;
+}
+
+export function practiceHudPromptForPhase(
+  phase: PracticePhaseDefinition,
+  passCount: number
+): string {
+  const remaining = phase.requiredPassCount - passCount;
+  return (phase.hudPromptTemplate ?? phase.promptTemplate).replace("{n}", String(remaining));
+}
+
+export function practiceBubblePromptForPhase(
+  phase: PracticePhaseDefinition,
+  passCount: number
+): string {
+  const remaining = phase.requiredPassCount - passCount;
+  return phase.promptTemplate.replace("{n}", String(remaining));
+}
+
+function inputLabelForType(inputType: InputType): string {
+  switch (inputType) {
+    case "AB":
+      return "A+S";
+    default:
+      return inputType;
+  }
 }

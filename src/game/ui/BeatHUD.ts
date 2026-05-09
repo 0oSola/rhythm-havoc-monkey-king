@@ -5,7 +5,8 @@ export class BeatHUD {
   private readonly promptText: Phaser.GameObjects.Text;
   private readonly feedbackText: Phaser.GameObjects.Text;
 
-  constructor(scene: Phaser.Scene, _levelName: string) {
+  constructor(scene: Phaser.Scene, levelName: string) {
+    void levelName;
     this.feedbackText = scene.add
       .text(BEAT_HUD_LAYOUT.feedback.x, BEAT_HUD_LAYOUT.feedback.y, "按 A 或点击继续", {
         color: "#ffd166",
@@ -34,7 +35,10 @@ export class BeatHUD {
       .setDepth(30);
   }
 
-  setScore(_combo: number, _score: number): void {}
+  setScore(combo: number, score: number): void {
+    void combo;
+    void score;
+  }
 
   setFeedback(label: string, color = "#ffd166"): void {
     this.feedbackText.setText(label);
@@ -53,5 +57,7 @@ export class BeatHUD {
     this.promptText.setVisible(visible);
   }
 
-  setTitle(_title: string): void {}
+  setTitle(title: string): void {
+    void title;
+  }
 }
