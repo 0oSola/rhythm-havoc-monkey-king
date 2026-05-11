@@ -108,6 +108,8 @@ import {
 } from "./LevelOpeningStory";
 import { beginLevelResultTransition } from "./LevelSceneResultTransition";
 
+const LEVEL_SCENE_DEBUG_ENABLED = import.meta.env.DEV;
+
 export class LevelScene extends Phaser.Scene {
   private readonly animationController = new AnimationController();
   private readonly level: LevelDefinition = parseLevelDefinition(gateLevelData);
@@ -176,7 +178,9 @@ export class LevelScene extends Phaser.Scene {
     this.resetState();
     this.loadBubbleStyle();
     this.createStage();
-    this.createBubbleDebugPanel();
+    if (LEVEL_SCENE_DEBUG_ENABLED) {
+      this.createBubbleDebugPanel();
+    }
     this.hud = new BeatHUD(this, this.level.name);
     this.hud.setScore(0, 0);
     this.hud.setFeedback("按 A 或点击继续", "#ffd166");
@@ -224,9 +228,11 @@ export class LevelScene extends Phaser.Scene {
       });
     });
 
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.destroyBubbleDebugPanel();
-    });
+    if (LEVEL_SCENE_DEBUG_ENABLED) {
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+        this.destroyBubbleDebugPanel();
+      });
+    }
   }
 
   update(): void {
@@ -1886,6 +1892,10 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private onDevSequenceKeyDown(event: KeyboardEvent): void {
+    if (!LEVEL_SCENE_DEBUG_ENABLED) {
+      return;
+    }
+
     if (event.repeat || event.ctrlKey || event.metaKey || event.altKey) {
       return;
     }
