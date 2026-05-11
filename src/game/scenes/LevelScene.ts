@@ -1271,8 +1271,8 @@ export class LevelScene extends Phaser.Scene {
       this.guardPraiseResetTimer = this.time.delayedCall(
         praisePlaybackDelayMs + GUARD_PRAISE_IDLE_REPOSITION_DELAY_MS,
         () => {
-        this.guardPraiseResetTimer = undefined;
-          this.resetActorPosition("guard");
+          this.guardPraiseResetTimer = undefined;
+          this.playActorIdleLoop("guard", true);
         }
       );
     }
@@ -1976,7 +1976,7 @@ export class LevelScene extends Phaser.Scene {
           praisePlaybackDelayMs + GUARD_PRAISE_IDLE_REPOSITION_DELAY_MS,
           () => {
             this.guardPraiseResetTimer = undefined;
-            this.resetActorPosition("guard");
+            this.playActorIdleLoop("guard", true);
           }
         );
       }
