@@ -53,4 +53,16 @@ describe("Level1AssetCatalog", () => {
       expect(LEVEL1_AUDIO_URLS[lookupPath], `${relativePath} should be preloadable`).toBeDefined();
     });
   });
+
+  it("keeps runtime audio file paths portable by avoiding Chinese path segments", () => {
+    Object.values(LEVEL1_SOUND_ENTRIES).forEach((relativePath) => {
+      expect(relativePath).not.toMatch(/[\u4E00-\u9FFF]/);
+    });
+  });
+
+  it("keeps every preloadable level 1 wav filename portable by avoiding Chinese path segments", () => {
+    Object.keys(LEVEL1_AUDIO_URLS).forEach((relativePath) => {
+      expect(relativePath).not.toMatch(/[\u4E00-\u9FFF]/);
+    });
+  });
 });
